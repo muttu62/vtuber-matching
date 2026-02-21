@@ -12,6 +12,8 @@ export type UserProfile = {
   email: string;
   createdAt: string;
   userType?: "vtuber" | "creator";
+  acceptsRequests?: boolean;
+  privateContact?: string;
 };
 
 export async function createUserProfile(uid: string, email: string) {
@@ -46,15 +48,17 @@ export type Match = {
   id: string;
   sender_id: string;
   receiver_id: string;
-  status: "pending" | "accepted" | "rejected";
+  status: "pending" | "accepted" | "dismissed";
+  message?: string;
   created_at: string;
 };
 
-export async function sendMatchRequest(senderId: string, receiverId: string): Promise<void> {
+export async function sendMatchRequest(senderId: string, receiverId: string, message?: string): Promise<void> {
   await addDoc(collection(db, "matches"), {
     sender_id: senderId,
     receiver_id: receiverId,
     status: "pending",
+    message: message ?? "",
     created_at: new Date().toISOString(),
   });
 }
@@ -81,6 +85,17 @@ export async function getSentMatches(uid: string): Promise<Match[]> {
   const q = query(collection(db, "matches"), where("sender_id", "==", uid));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Match));
+}
+
+export async function getSentMatchesToday(uid: string): Promise<Match[]> {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const todayStartISO = todayStart.toISOString();
+  const q = query(collection(db, "matches"), where("sender_id", "==", uid));
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as Match))
+    .filter((m) => m.created_at >= todayStartISO);
 }
 
 export async function updateMatchStatus(matchId: string, status: Match["status"]): Promise<void> {

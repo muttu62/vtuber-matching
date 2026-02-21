@@ -18,6 +18,7 @@ export default function OnboardingPage() {
     snsLinks: "",
     avatarUrl: "",
   });
+  const [acceptsRequests, setAcceptsRequests] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,7 +32,10 @@ export default function OnboardingPage() {
     setSaving(true);
     setError("");
     try {
-      await updateUserProfile(user.uid, form);
+      await updateUserProfile(user.uid, {
+        ...form,
+        acceptsRequests: form.userType === "creator" ? acceptsRequests : false,
+      });
       router.push("/explore");
     } catch (err: any) {
       setError("保存に失敗しました: " + err.message);
@@ -89,6 +93,22 @@ export default function OnboardingPage() {
               <option value="creator">クリエイター（イラスト・動画編集・作曲など）</option>
             </select>
           </div>
+
+          {form.userType === "creator" && (
+            <div className="flex items-start gap-3 p-3 bg-gray-800 rounded-lg">
+              <input
+                type="checkbox"
+                id="acceptsRequests"
+                checked={acceptsRequests}
+                onChange={(e) => setAcceptsRequests(e.target.checked)}
+                className="w-4 h-4 mt-0.5 accent-purple-500 shrink-0"
+              />
+              <label htmlFor="acceptsRequests" className="text-gray-300 text-sm cursor-pointer">
+                制作依頼を受け付ける
+                <span className="block text-gray-500 text-xs mt-0.5">チェックするとユーザー一覧に表示されます</span>
+              </label>
+            </div>
+          )}
 
           <div>
             <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>

@@ -30,8 +30,10 @@ export default function ProfileEditPage() {
   const router = useRouter();
 
   const [form, setForm] = useState<FormValues>(EMPTY_FORM);
-  // Firestoreから取得した元の値を保持（差分検出用）
   const savedRef = useRef<FormValues>(EMPTY_FORM);
+
+  const [acceptsRequests, setAcceptsRequests] = useState(false);
+  const savedAcceptsRequestsRef = useRef(false);
 
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -52,7 +54,9 @@ export default function ProfileEditPage() {
             avatarUrl: profile.avatarUrl ?? "",
           };
           setForm(values);
-          savedRef.current = values; // 元の値を記録
+          savedRef.current = values;
+          setAcceptsRequests(profile.acceptsRequests ?? false);
+          savedAcceptsRequestsRef.current = profile.acceptsRequests ?? false;
         }
       })
       .finally(() => setFetching(false));
@@ -70,7 +74,6 @@ export default function ProfileEditPage() {
     setSaving(true);
     setError("");
     try {
-      // 変更されたフィールドのみ抽出
       const changed = (Object.keys(form) as Array<keyof FormValues>).reduce(
         (acc, key) => {
           if (form[key] !== savedRef.current[key]) acc[key] = form[key];
@@ -79,9 +82,19 @@ export default function ProfileEditPage() {
         {} as Partial<FormValues>
       );
 
-      if (Object.keys(changed).length > 0) {
-        await updateUserProfile(user.uid, changed);
-        savedRef.current = { ...form }; // 保存成功後に元の値を更新
+      // boolean フィールドの差分チェック
+      const updates: Record<string, unknown> = { ...changed };
+      if (form.userType === "creator" && acceptsRequests !== savedAcceptsRequestsRef.current) {
+        updates.acceptsRequests = acceptsRequests;
+      }
+      if (form.userType !== "creator" && savedRef.current.userType === "creator") {
+        updates.acceptsRequests = false;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await updateUserProfile(user.uid, updates);
+        savedRef.current = { ...form };
+        savedAcceptsRequestsRef.current = acceptsRequests;
       }
 
       router.push("/mypage");
@@ -140,6 +153,22 @@ export default function ProfileEditPage() {
               <option value="creator">クリエイター（イラスト・動画編集・作曲など）</option>
             </select>
           </div>
+
+          {form.userType === "creator" && (
+            <div className="flex items-start gap-3 p-3 bg-gray-800 rounded-lg">
+              <input
+                type="checkbox"
+                id="acceptsRequests"
+                checked={acceptsRequests}
+                onChange={(e) => setAcceptsRequests(e.target.checked)}
+                className="w-4 h-4 mt-0.5 accent-purple-500 shrink-0"
+              />
+              <label htmlFor="acceptsRequests" className="text-gray-300 text-sm cursor-pointer">
+                制作依頼を受け付ける
+                <span className="block text-gray-500 text-xs mt-0.5">チェックするとユーザー一覧に表示されます</span>
+              </label>
+            </div>
+          )}
 
           <div>
             <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>

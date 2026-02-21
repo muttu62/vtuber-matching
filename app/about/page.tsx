@@ -9,7 +9,7 @@ export default function AboutPage() {
         <div className="text-center mb-14">
           <h1 className="text-5xl font-extrabold text-white mb-4 tracking-tight">Vクリ</h1>
           <p className="text-xl text-gray-300">
-            VTuberとクリエイターが出会う、コラボマッチングサービス
+            <p>「VTuberとVTuber」「VTuberとクリエイター」</p><p>が出会う、無料マッチングサービス</p>
           </p>
         </div>
 
@@ -20,12 +20,16 @@ export default function AboutPage() {
             「Vクリ」は、活動中の<span className="text-purple-400 font-semibold">VTuber</span>と、
             イラスト・動画編集・作曲などを手がける
             <span className="text-green-400 font-semibold">クリエイター</span>が
-            コラボ相手を見つけるためのマッチングサービスです。
+            コラボ相手・依頼先を見つけるためのマッチングサービスです。
           </p>
-          <p className="text-gray-300 leading-relaxed">
+          <p className="text-gray-300 leading-relaxed mb-4">
             プロフィールを公開して申請を送るだけで、活動ジャンルや時間帯が合う相手と
             簡単につながることができます。
           </p>
+          <div className="bg-gray-800 rounded-xl px-4 py-3 text-sm text-gray-300">
+            一覧に並んでいるクリエイターは全員、有償依頼「受付中」のため、確認の手間が不要です。
+            <span className="text-purple-400 font-medium"> ※販売手数料はかかりません</span>
+          </div>
         </div>
 
         {/* 特徴 */}
@@ -34,21 +38,21 @@ export default function AboutPage() {
             <div className="text-3xl mb-3">🔍</div>
             <h3 className="text-white font-bold mb-2">探す</h3>
             <p className="text-gray-400 text-sm">
-              VTuberまたはクリエイターでフィルターしてコラボ相手を探せます
+              VTuberまたはクリエイターでフィルターしてコラボ相手・依頼先を探せます
             </p>
           </div>
           <div className="bg-gray-900 rounded-2xl p-6 text-center">
             <div className="text-3xl mb-3">✉️</div>
             <h3 className="text-white font-bold mb-2">申請する</h3>
             <p className="text-gray-400 text-sm">
-              気になった相手に「コラボしたい！」と申請を送れます
+              気になった相手に、気軽にフレンド申請を送れます
             </p>
           </div>
           <div className="bg-gray-900 rounded-2xl p-6 text-center">
             <div className="text-3xl mb-3">🎉</div>
             <h3 className="text-white font-bold mb-2">マッチング</h3>
             <p className="text-gray-400 text-sm">
-              承認されたらマッチング成立。メール通知でお知らせします
+              承認されたらマッチング成立！メール通知でお知らせし、非公開の連絡先がお互いに確認できます
             </p>
           </div>
         </div>

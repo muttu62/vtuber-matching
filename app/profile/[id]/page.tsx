@@ -7,6 +7,7 @@ import {
   UserProfile,
   getMatchBetween,
   sendMatchRequest,
+  getSentMatchesToday,
   Match,
 } from "../../../lib/firestore";
 
@@ -19,6 +20,9 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [existingMatch, setExistingMatch] = useState<Match | null>(null);
   const [sending, setSending] = useState(false);
+  const [showMessageForm, setShowMessageForm] = useState(false);
+  const [message, setMessage] = useState("");
+  const [limitReached, setLimitReached] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -32,11 +36,18 @@ export default function UserProfilePage() {
     getMatchBetween(user.uid, id).then(setExistingMatch);
   }, [user, id]);
 
+  useEffect(() => {
+    if (!user || !id || user.uid === id) return;
+    getSentMatchesToday(user.uid).then((matches) => {
+      setLimitReached(matches.length >= 1);
+    });
+  }, [user, id]);
+
   const handleSendMatch = async () => {
     if (!user || !id || !profile) return;
     setSending(true);
     try {
-      await sendMatchRequest(user.uid, id);
+      await sendMatchRequest(user.uid, id, message.trim() || undefined);
       setExistingMatch({
         id: "",
         sender_id: user.uid,
@@ -169,7 +180,7 @@ export default function UserProfilePage() {
             </div>
           )}
 
-          {/* コラボ申請ボタン（自分以外に表示） */}
+          {/* フレンド申請ボタン（自分以外に表示） */}
           {!isOwnProfile && (
             <>
               {existingMatch ? (
@@ -179,13 +190,44 @@ export default function UserProfilePage() {
                 >
                   申請済み
                 </button>
+              ) : limitReached ? (
+                <p className="text-center text-yellow-400 text-sm py-3">
+                  本日の申請可能枠（1/1）は使用済みです
+                </p>
+              ) : showMessageForm ? (
+                <div className="space-y-3">
+                  <textarea
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="一言メッセージを添えられます（任意）"
+                    rows={3}
+                    maxLength={200}
+                    className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 resize-none text-sm"
+                  />
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => { setShowMessageForm(false); setMessage(""); }}
+                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2.5 rounded-lg transition-colors"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSendMatch}
+                      disabled={sending}
+                      className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold py-2.5 rounded-lg transition-colors"
+                    >
+                      {sending ? "送信中..." : "送信する"}
+                    </button>
+                  </div>
+                </div>
               ) : (
                 <button
-                  onClick={handleSendMatch}
-                  disabled={sending}
-                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-colors"
+                  onClick={() => setShowMessageForm(true)}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
                 >
-                  {sending ? "送信中..." : "コラボしたい！"}
+                  フレンド申請する
                 </button>
               )}
             </>

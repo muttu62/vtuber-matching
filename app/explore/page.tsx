@@ -21,7 +21,11 @@ export default function ExplorePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = filter === "all" ? users : users.filter((u) => u.userType === filter);
+  // クリエイターは acceptsRequests=true の人だけ表示
+  const visibleUsers = users.filter(
+    (u) => u.userType !== "creator" || u.acceptsRequests === true
+  );
+  const filtered = filter === "all" ? visibleUsers : visibleUsers.filter((u) => u.userType === filter);
 
   const tabs: { key: FilterTab; label: string }[] = [
     { key: "all", label: "すべて" },

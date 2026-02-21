@@ -34,6 +34,7 @@ export default function OnboardingPage() {
     try {
       await updateUserProfile(user.uid, {
         ...form,
+        userType: form.userType as "vtuber" | "creator" | undefined,
         acceptsRequests: form.userType === "creator" ? acceptsRequests : false,
       });
       router.push("/explore");

@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
+import { verifySession } from "../../../lib/verify-session";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "VTuberMatch <onboarding@resend.dev>";
@@ -23,6 +24,11 @@ type MatchAcceptedPayload = {
 type EmailPayload = MatchRequestPayload | MatchAcceptedPayload;
 
 export async function POST(req: NextRequest) {
+  const uid = await verifySession(req);
+  if (!uid) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
   try {
     const body: EmailPayload = await req.json();
 

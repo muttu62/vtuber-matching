@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import { NextRequest, NextResponse } from "next/server";
+import { verifySession } from "../../../lib/verify-session";
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -8,6 +9,11 @@ cloudinary.config({
 });
 
 export async function POST(req: NextRequest) {
+  const uid = await verifySession(req);
+  if (!uid) {
+    return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
+  }
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

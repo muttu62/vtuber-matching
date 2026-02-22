@@ -1,28 +1,59 @@
 "use client";
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { createUserProfile } from "../../lib/firestore";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const router = useRouter();
+  const [emailSent, setEmailSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitting(true);
+    setError("");
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       await createUserProfile(result.user.uid, email);
-      const idToken = await result.user.getIdToken();
-      document.cookie = `session=${idToken}; path=/; max-age=3600`;
-      router.push("/onboarding");
+      await sendEmailVerification(result.user);
+      // セッションクッキーは設定しない（メール確認後にログインしてもらう）
+      setEmailSent(true);
     } catch (err: any) {
       setError("登録に失敗しました: " + err.message);
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  if (emailSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
+        <div className="bg-gray-900 p-8 rounded-2xl w-full max-w-md text-center">
+          <div className="text-5xl mb-4">📧</div>
+          <h1 className="text-2xl font-bold text-white mb-3">確認メールを送信しました</h1>
+          <p className="text-gray-400 text-sm leading-relaxed mb-2">
+            <span className="text-white font-medium">{email}</span> に確認メールを送りました。
+          </p>
+          <p className="text-gray-400 text-sm leading-relaxed mb-8">
+            メールのリンクをクリックして登録を完了してください。確認後、下のボタンからログインしてプロフィールを設定してください。
+          </p>
+          <Link
+            href="/login"
+            className="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
+          >
+            ログインへ
+          </Link>
+          <p className="text-gray-500 text-xs mt-4">
+            メールが届かない場合は迷惑メールフォルダをご確認ください
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950">
@@ -48,9 +79,10 @@ export default function SignupPage() {
           />
           <button
             type="submit"
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg"
+            disabled={submitting}
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg"
           >
-            登録する
+            {submitting ? "登録中..." : "登録する"}
           </button>
         </form>
         <p className="text-gray-400 text-sm mt-4 text-center">

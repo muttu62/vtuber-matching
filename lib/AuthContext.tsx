@@ -1,6 +1,6 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onIdTokenChanged, User } from "firebase/auth";
 import { auth } from "./firebase";
 
 type AuthContextType = {
@@ -15,9 +15,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    // onIdTokenChanged は認証状態の変化だけでなく、
+    // Firebaseがトークンを自動更新するたびにも発火するため
+    // セッションクッキーを常に最新の状態に保てる
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
       setUser(user);
       setLoading(false);
+      if (user && user.emailVerified) {
+        const token = await user.getIdToken();
+        document.cookie = `session=${token}; path=/; max-age=3600`;
+      } else {
+        // 未確認ユーザーまたはログアウト時はクッキーをクリア
+        document.cookie = `session=; path=/; max-age=0`;
+      }
     });
     return unsubscribe;
   }, []);

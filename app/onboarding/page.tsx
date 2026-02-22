@@ -17,6 +17,7 @@ export default function OnboardingPage() {
     description: "",
     snsLinks: "",
     avatarUrl: "",
+    privateContact: "",
   });
   const [acceptsRequests, setAcceptsRequests] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -49,6 +50,27 @@ export default function OnboardingPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950">
         <p className="text-gray-400">読み込み中...</p>
+      </div>
+    );
+  }
+
+  // メール未確認ユーザーへの案内
+  if (user && !user.emailVerified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
+        <div className="bg-gray-900 p-8 rounded-2xl w-full max-w-md text-center">
+          <div className="text-5xl mb-4">📧</div>
+          <h1 className="text-xl font-bold text-white mb-3">メール確認が必要です</h1>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            登録時に送信した確認メールのリンクをクリックしてからログインしてください。
+          </p>
+          <a
+            href="/login"
+            className="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
+          >
+            ログインへ
+          </a>
+        </div>
       </div>
     );
   }
@@ -169,6 +191,24 @@ export default function OnboardingPage() {
               placeholder="Twitter・YouTubeなどのURL"
               className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
             />
+          </div>
+
+          <div>
+            <label className="block text-gray-300 text-sm mb-1">
+              非公開の連絡先 <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              name="privateContact"
+              value={form.privateContact}
+              onChange={handleChange}
+              placeholder="例: Discord: username#1234"
+              required
+              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+            />
+            <p className="text-gray-500 text-xs mt-2 leading-relaxed">
+              Xのユーザー名を記載してDMのやりとりなどでもOKですが、Xでの設定によりDMが送れない場合もありますので、多くのユーザーが使用しているDiscordのIDがおすすめです。マッチングが成立した相手にのみ公開されます。
+            </p>
           </div>
 
           <button

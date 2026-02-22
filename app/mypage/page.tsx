@@ -148,20 +148,9 @@ export default function MyPage() {
                 </div>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-3">
-                <p className={`text-sm ${profile?.privateContact ? "text-white" : "text-gray-500"}`}>
-                  {profile?.privateContact || "未設定"}
-                </p>
-                <button
-                  onClick={() => {
-                    setContactInput(profile?.privateContact ?? "");
-                    setEditingContact(true);
-                  }}
-                  className="text-xs text-purple-400 hover:text-purple-300 shrink-0"
-                >
-                  編集
-                </button>
-              </div>
+              <p className={`text-sm ${profile?.privateContact ? "text-white" : "text-gray-500"}`}>
+                {profile?.privateContact || "未設定"}
+              </p>
             )}
           </div>
         </div>

@@ -88,7 +88,7 @@ export default function ExplorePage() {
                     user.userType === "vtuber"
                       ? "bg-blue-900/50 text-blue-300"
                       : user.userType === "vtuber_creator"
-                      ? "bg-yellow-500 text-black"
+                      ? "bg-orange-900/50 text-orange-300"
                       : "bg-green-900/50 text-green-300"
                   }`}>
                     {USER_TYPE_LABEL[user.userType]}

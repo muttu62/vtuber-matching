@@ -5,6 +5,15 @@ import { useAuth } from "../../lib/AuthContext";
 import { updateUserProfile } from "../../lib/firestore";
 import AvatarUpload from "../../components/AvatarUpload";
 
+const VTUBER_GENRES = ["ゲーム", "雑談", "歌", "料理", "学習", "その他"];
+const CREATOR_GENRES = ["イラスト", "アニメーション", "動画編集", "デザイン", "作曲", "3Dモデリング", "その他"];
+
+function getGenreOptions(userType: string): string[] {
+  if (userType === "vtuber") return VTUBER_GENRES;
+  if (userType === "creator" || userType === "vtuber_creator") return CREATOR_GENRES;
+  return [];
+}
+
 export default function OnboardingPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -24,7 +33,16 @@ export default function OnboardingPage() {
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      // userType 変更時に無効なジャンルをリセット
+      if (name === "userType") {
+        const valid = getGenreOptions(value);
+        if (!valid.includes(prev.genre)) next.genre = "";
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -33,10 +51,11 @@ export default function OnboardingPage() {
     setSaving(true);
     setError("");
     try {
+      const isCreatorType = form.userType === "creator" || form.userType === "vtuber_creator";
       await updateUserProfile(user.uid, {
         ...form,
-        userType: form.userType as "vtuber" | "creator" | undefined,
-        acceptsRequests: form.userType === "creator" ? acceptsRequests : false,
+        userType: form.userType as "vtuber" | "creator" | "vtuber_creator" | undefined,
+        acceptsRequests: isCreatorType ? acceptsRequests : false,
       });
       router.push("/explore");
     } catch (err: any) {
@@ -54,7 +73,6 @@ export default function OnboardingPage() {
     );
   }
 
-  // メール未確認ユーザーへの案内
   if (user && !user.emailVerified) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950 px-4">
@@ -74,6 +92,9 @@ export default function OnboardingPage() {
       </div>
     );
   }
+
+  const genreOptions = getGenreOptions(form.userType);
+  const isCreatorType = form.userType === "creator" || form.userType === "vtuber_creator";
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950 py-12">
@@ -113,11 +134,12 @@ export default function OnboardingPage() {
             >
               <option value="">選択してください</option>
               <option value="vtuber">VTuber</option>
-              <option value="creator">クリエイター（イラスト・動画編集・作曲など）</option>
+              <option value="creator">クリエイター</option>
+              <option value="vtuber_creator">VTuber兼クリエイター</option>
             </select>
           </div>
 
-          {form.userType === "creator" && (
+          {isCreatorType && (
             <div className="flex items-start gap-3 p-3 bg-gray-800 rounded-lg">
               <input
                 type="checkbox"
@@ -133,24 +155,22 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          <div>
-            <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>
-            <select
-              name="genre"
-              value={form.genre}
-              onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-            >
-              <option value="">選択してください</option>
-              <option value="ゲーム">ゲーム</option>
-              <option value="雑談">雑談</option>
-              <option value="歌">歌</option>
-              <option value="イラスト">イラスト</option>
-              <option value="料理">料理</option>
-              <option value="学習">学習</option>
-              <option value="その他">その他</option>
-            </select>
-          </div>
+          {genreOptions.length > 0 && (
+            <div>
+              <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>
+              <select
+                name="genre"
+                value={form.genre}
+                onChange={handleChange}
+                className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+              >
+                <option value="">選択してください</option>
+                {genreOptions.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-gray-300 text-sm mb-1">活動時間帯</label>

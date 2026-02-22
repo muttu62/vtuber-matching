@@ -5,6 +5,15 @@ import { useAuth } from "../../../lib/AuthContext";
 import { getUserProfile, updateUserProfile } from "../../../lib/firestore";
 import AvatarUpload from "../../../components/AvatarUpload";
 
+const VTUBER_GENRES = ["ゲーム", "雑談", "歌", "料理", "学習", "その他"];
+const CREATOR_GENRES = ["イラスト", "アニメーション", "動画編集", "デザイン", "作曲", "3Dモデリング", "その他"];
+
+function getGenreOptions(userType: string): string[] {
+  if (userType === "vtuber") return VTUBER_GENRES;
+  if (userType === "creator" || userType === "vtuber_creator") return CREATOR_GENRES;
+  return [...VTUBER_GENRES, ...CREATOR_GENRES];
+}
+
 type FormValues = {
   name: string;
   userType: string;
@@ -65,7 +74,15 @@ export default function ProfileEditPage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "userType") {
+        const valid = getGenreOptions(value);
+        if (!valid.includes(prev.genre)) next.genre = "";
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,12 +99,14 @@ export default function ProfileEditPage() {
         {} as Partial<FormValues>
       );
 
-      // boolean フィールドの差分チェック
+      const isCreatorType = form.userType === "creator" || form.userType === "vtuber_creator";
+      const wasCreatorType = savedRef.current.userType === "creator" || savedRef.current.userType === "vtuber_creator";
+
       const updates: Record<string, unknown> = { ...changed };
-      if (form.userType === "creator" && acceptsRequests !== savedAcceptsRequestsRef.current) {
+      if (isCreatorType && acceptsRequests !== savedAcceptsRequestsRef.current) {
         updates.acceptsRequests = acceptsRequests;
       }
-      if (form.userType !== "creator" && savedRef.current.userType === "creator") {
+      if (!isCreatorType && wasCreatorType) {
         updates.acceptsRequests = false;
       }
 
@@ -150,11 +169,12 @@ export default function ProfileEditPage() {
             >
               <option value="">選択してください</option>
               <option value="vtuber">VTuber</option>
-              <option value="creator">クリエイター（イラスト・動画編集・作曲など）</option>
+              <option value="creator">クリエイター</option>
+              <option value="vtuber_creator">VTuber兼クリエイター</option>
             </select>
           </div>
 
-          {form.userType === "creator" && (
+          {(form.userType === "creator" || form.userType === "vtuber_creator") && (
             <div className="flex items-start gap-3 p-3 bg-gray-800 rounded-lg">
               <input
                 type="checkbox"
@@ -179,13 +199,9 @@ export default function ProfileEditPage() {
               className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
             >
               <option value="">選択してください</option>
-              <option value="ゲーム">ゲーム</option>
-              <option value="雑談">雑談</option>
-              <option value="歌">歌</option>
-              <option value="イラスト">イラスト</option>
-              <option value="料理">料理</option>
-              <option value="学習">学習</option>
-              <option value="その他">その他</option>
+              {getGenreOptions(form.userType).map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
             </select>
           </div>
 

@@ -1,7 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
+import {
+  signOut,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  verifyBeforeUpdateEmail,
+} from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { useAuth } from "../../lib/AuthContext";
 import { getUserProfile, updateUserProfile, UserProfile } from "../../lib/firestore";
@@ -17,12 +23,79 @@ export default function MyPage() {
   const [contactInput, setContactInput] = useState("");
   const [savingContact, setSavingContact] = useState(false);
 
+  // パスワード変更
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState("");
+  const [savingPw, setSavingPw] = useState(false);
+
+  // メールアドレス変更
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emCurrent, setEmCurrent] = useState("");
+  const [emNew, setEmNew] = useState("");
+  const [emError, setEmError] = useState("");
+  const [emSuccess, setEmSuccess] = useState("");
+  const [savingEm, setSavingEm] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     getUserProfile(user.uid)
       .then(setProfile)
       .finally(() => setFetching(false));
   }, [user]);
+
+  const handleChangePassword = async () => {
+    if (!user) return;
+    if (pwNew !== pwConfirm) { setPwError("新しいパスワードが一致しません"); return; }
+    if (pwNew.length < 6) { setPwError("パスワードは6文字以上で入力してください"); return; }
+    setSavingPw(true);
+    setPwError("");
+    setPwSuccess("");
+    try {
+      const cred = EmailAuthProvider.credential(user.email!, pwCurrent);
+      await reauthenticateWithCredential(user, cred);
+      await updatePassword(user, pwNew);
+      setPwSuccess("パスワードを変更しました");
+      setPwCurrent(""); setPwNew(""); setPwConfirm("");
+      setShowPasswordForm(false);
+    } catch (err: any) {
+      if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+        setPwError("現在のパスワードが正しくありません");
+      } else {
+        setPwError("変更に失敗しました: " + err.message);
+      }
+    } finally {
+      setSavingPw(false);
+    }
+  };
+
+  const handleChangeEmail = async () => {
+    if (!user) return;
+    setSavingEm(true);
+    setEmError("");
+    setEmSuccess("");
+    try {
+      const cred = EmailAuthProvider.credential(user.email!, emCurrent);
+      await reauthenticateWithCredential(user, cred);
+      await verifyBeforeUpdateEmail(user, emNew);
+      setEmSuccess("確認メールを送信しました。新しいメールアドレスのリンクをクリックすると変更が完了します。");
+      setEmCurrent(""); setEmNew("");
+      setShowEmailForm(false);
+    } catch (err: any) {
+      if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+        setEmError("現在のパスワードが正しくありません");
+      } else if (err.code === "auth/email-already-in-use") {
+        setEmError("そのメールアドレスはすでに使用されています");
+      } else {
+        setEmError("変更に失敗しました: " + err.message);
+      }
+    } finally {
+      setSavingEm(false);
+    }
+  };
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -153,6 +226,94 @@ export default function MyPage() {
               </p>
             )}
           </div>
+        </div>
+
+        {/* パスワード変更 */}
+        <div className="bg-gray-900 rounded-2xl p-6 mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-white font-bold">パスワード変更</h2>
+            <button
+              onClick={() => { setShowPasswordForm((v) => !v); setPwError(""); setPwSuccess(""); }}
+              className="text-purple-400 hover:text-purple-300 text-sm"
+            >
+              {showPasswordForm ? "閉じる" : "変更する"}
+            </button>
+          </div>
+          {pwSuccess && <p className="text-green-400 text-sm mt-1">{pwSuccess}</p>}
+          {showPasswordForm && (
+            <div className="mt-3 space-y-2">
+              {pwError && <p className="text-red-400 text-sm">{pwError}</p>}
+              <input
+                type="password"
+                placeholder="現在のパスワード"
+                value={pwCurrent}
+                onChange={(e) => setPwCurrent(e.target.value)}
+                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+              />
+              <input
+                type="password"
+                placeholder="新しいパスワード（6文字以上）"
+                value={pwNew}
+                onChange={(e) => setPwNew(e.target.value)}
+                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+              />
+              <input
+                type="password"
+                placeholder="新しいパスワード（確認）"
+                value={pwConfirm}
+                onChange={(e) => setPwConfirm(e.target.value)}
+                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+              />
+              <button
+                onClick={handleChangePassword}
+                disabled={savingPw || !pwCurrent || !pwNew || !pwConfirm}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition-colors"
+              >
+                {savingPw ? "変更中..." : "パスワードを変更する"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* メールアドレス変更 */}
+        <div className="bg-gray-900 rounded-2xl p-6 mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-white font-bold">メールアドレス変更</h2>
+            <button
+              onClick={() => { setShowEmailForm((v) => !v); setEmError(""); setEmSuccess(""); }}
+              className="text-purple-400 hover:text-purple-300 text-sm"
+            >
+              {showEmailForm ? "閉じる" : "変更する"}
+            </button>
+          </div>
+          <p className="text-gray-500 text-xs">現在: {user?.email}</p>
+          {emSuccess && <p className="text-green-400 text-sm mt-1">{emSuccess}</p>}
+          {showEmailForm && (
+            <div className="mt-3 space-y-2">
+              {emError && <p className="text-red-400 text-sm">{emError}</p>}
+              <input
+                type="password"
+                placeholder="現在のパスワード"
+                value={emCurrent}
+                onChange={(e) => setEmCurrent(e.target.value)}
+                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+              />
+              <input
+                type="email"
+                placeholder="新しいメールアドレス"
+                value={emNew}
+                onChange={(e) => setEmNew(e.target.value)}
+                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+              />
+              <button
+                onClick={handleChangeEmail}
+                disabled={savingEm || !emCurrent || !emNew}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition-colors"
+              >
+                {savingEm ? "送信中..." : "確認メールを送信する"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ボタン群 */}

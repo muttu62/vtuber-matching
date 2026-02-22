@@ -8,6 +8,7 @@ type FilterTab = "all" | "vtuber" | "creator";
 const USER_TYPE_LABEL: Record<string, string> = {
   vtuber: "VTuber",
   creator: "クリエイター",
+  vtuber_creator: "VTuber兼クリエイター",
 };
 
 export default function ExplorePage() {
@@ -21,11 +22,18 @@ export default function ExplorePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // クリエイターは acceptsRequests=true の人だけ表示
+  // creator のみ acceptsRequests=true の場合のみ表示（vtuber / vtuber_creator は常に表示）
   const visibleUsers = users.filter(
     (u) => u.userType !== "creator" || u.acceptsRequests === true
   );
-  const filtered = filter === "all" ? visibleUsers : visibleUsers.filter((u) => u.userType === filter);
+  const filtered =
+    filter === "all"
+      ? visibleUsers
+      : visibleUsers.filter((u) => {
+          if (filter === "vtuber") return u.userType === "vtuber" || u.userType === "vtuber_creator";
+          if (filter === "creator") return u.userType === "creator" || u.userType === "vtuber_creator";
+          return false;
+        });
 
   const tabs: { key: FilterTab; label: string }[] = [
     { key: "all", label: "すべて" },
@@ -79,6 +87,8 @@ export default function ExplorePage() {
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     user.userType === "vtuber"
                       ? "bg-blue-900/50 text-blue-300"
+                      : user.userType === "vtuber_creator"
+                      ? "bg-purple-900/50 text-purple-300"
                       : "bg-green-900/50 text-green-300"
                   }`}>
                     {USER_TYPE_LABEL[user.userType]}

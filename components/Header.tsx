@@ -11,13 +11,18 @@ export default function Header() {
   const { user } = useAuth();
   const [showPopup, setShowPopup] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const navRef = useRef<HTMLElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
 
   // ポップアップ外クリックで閉じる
   useEffect(() => {
     if (!showPopup) return;
     const handler = (e: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        popupRef.current && !popupRef.current.contains(target) &&
+        navRef.current && !navRef.current.contains(target)
+      ) {
         setShowPopup(false);
       }
     };
@@ -58,7 +63,7 @@ export default function Header() {
         <Link href="/about" className="text-white font-bold text-lg tracking-tight">
           Vクリ
         </Link>
-        <nav className="flex items-center gap-1 relative" ref={popupRef}>
+        <nav ref={navRef} className="flex items-center gap-1">
           {/* 探す（公開） */}
           <Link
             href="/explore"
@@ -100,31 +105,34 @@ export default function Header() {
               </button>
             )
           )}
-
-          {/* 未ログイン時のポップアップ */}
-          {showPopup && (
-            <div className="absolute top-full right-0 mt-2 w-52 bg-gray-800 border border-gray-700 rounded-xl shadow-xl p-4 z-50">
-              <p className="text-gray-300 text-sm text-center mb-3">ログインが必要です</p>
-              <div className="space-y-2">
-                <Link
-                  href="/login"
-                  onClick={() => setShowPopup(false)}
-                  className="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg transition-colors text-sm"
-                >
-                  ログイン
-                </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setShowPopup(false)}
-                  className="block w-full text-center bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 rounded-lg transition-colors text-sm"
-                >
-                  新規登録
-                </Link>
-              </div>
-            </div>
-          )}
         </nav>
       </div>
+
+      {/* 未ログイン時のポップアップ（fixed でスマホでも確実に表示） */}
+      {showPopup && (
+        <div
+          ref={popupRef}
+          className="fixed top-14 right-4 w-52 bg-gray-800 border border-gray-700 rounded-xl shadow-xl p-4 z-50"
+        >
+          <p className="text-gray-300 text-sm text-center mb-3">ログインが必要です</p>
+          <div className="space-y-2">
+            <Link
+              href="/login"
+              onClick={() => setShowPopup(false)}
+              className="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg transition-colors text-sm"
+            >
+              ログイン
+            </Link>
+            <Link
+              href="/signup"
+              onClick={() => setShowPopup(false)}
+              className="block w-full text-center bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 rounded-lg transition-colors text-sm"
+            >
+              新規登録
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

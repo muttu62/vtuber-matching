@@ -16,6 +16,14 @@ export type UserProfile = {
   privateContact?: string;
 };
 
+// 他ユーザーに公開するフィールドのみ（email・privateContact を除外）
+export type PublicUserProfile = Omit<UserProfile, "email" | "privateContact">;
+
+function toPublic(u: UserProfile): PublicUserProfile {
+  const { email: _e, privateContact: _p, ...rest } = u;
+  return rest;
+}
+
 export async function createUserProfile(uid: string, email: string) {
   await setDoc(doc(db, "users", uid), {
     uid,
@@ -35,13 +43,19 @@ export async function getUserProfile(uid: string) {
   return snap.exists() ? (snap.data() as UserProfile) : null;
 }
 
+// 他ユーザーのプロフィールを取得（email・privateContact を除いた公開情報のみ）
+export async function getPublicUserProfile(uid: string): Promise<PublicUserProfile | null> {
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists() ? toPublic(snap.data() as UserProfile) : null;
+}
+
 export async function updateUserProfile(uid: string, data: Partial<UserProfile>) {
   await setDoc(doc(db, "users", uid), data, { merge: true });
 }
 
-export async function getAllUsers(): Promise<UserProfile[]> {
+export async function getAllUsers(): Promise<PublicUserProfile[]> {
   const snap = await getDocs(collection(db, "users"));
-  return snap.docs.map((d) => d.data() as UserProfile);
+  return snap.docs.map((d) => toPublic(d.data() as UserProfile));
 }
 
 export type Match = {

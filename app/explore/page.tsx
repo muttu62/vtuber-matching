@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getAllUsers, UserProfile } from "../../lib/firestore";
+import { getAllUsers, PublicUserProfile } from "../../lib/firestore";
 
 type FilterTab = "all" | "vtuber" | "creator";
 
@@ -11,7 +11,7 @@ const USER_TYPE_LABEL: Record<string, string> = {
 };
 
 export default function ExplorePage() {
-  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [users, setUsers] = useState<PublicUserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("all");
 

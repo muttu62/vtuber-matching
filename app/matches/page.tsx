@@ -30,7 +30,6 @@ export default function MatchesPage() {
 
   const [received, setReceived] = useState<MatchWithProfile[]>([]);
   const [sent, setSent] = useState<MatchWithProfile[]>([]);
-  const [myProfile, setMyProfile] = useState<UserProfile | null>(null);
   const [fetching, setFetching] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
 
@@ -38,10 +37,9 @@ export default function MatchesPage() {
     if (!user) return;
 
     const fetchAll = async () => {
-      const [receivedMatches, sentMatches, me] = await Promise.all([
+      const [receivedMatches, sentMatches] = await Promise.all([
         getReceivedMatches(user.uid),
         getSentMatches(user.uid),
-        getUserProfile(user.uid),
       ]);
 
       const [receivedWithProfiles, sentWithProfiles] = await Promise.all([
@@ -59,7 +57,6 @@ export default function MatchesPage() {
         ),
       ]);
 
-      setMyProfile(me);
       setReceived(receivedWithProfiles);
       setSent(sentWithProfiles);
       setFetching(false);
@@ -78,16 +75,14 @@ export default function MatchesPage() {
       // マッチング成立時に両者へ通知メール（失敗してもブロックしない）
       if (status === "accepted") {
         const match = received.find((m) => m.id === matchId);
-        if (match?.profile && myProfile) {
+        if (match) {
           fetch("/api/send-email", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               type: "match_accepted",
-              senderEmail: match.profile.email,
-              senderName: match.profile.name || "ユーザー",
-              receiverEmail: myProfile.email,
-              receiverName: myProfile.name || "ユーザー",
+              senderId: match.sender_id,
+              receiverId: match.receiver_id,
             }),
           }).catch(console.error);
         }

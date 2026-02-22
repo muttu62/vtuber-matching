@@ -4,7 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "../../../lib/AuthContext";
 import {
   getUserProfile,
-  UserProfile,
+  getPublicUserProfile,
+  PublicUserProfile,
   getMatchBetween,
   sendMatchRequest,
   getSentMatchesToday,
@@ -16,7 +17,7 @@ export default function UserProfilePage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<PublicUserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [existingMatch, setExistingMatch] = useState<Match | null>(null);
   const [sending, setSending] = useState(false);
@@ -26,7 +27,7 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     if (!id) return;
-    getUserProfile(id)
+    getPublicUserProfile(id)
       .then(setProfile)
       .finally(() => setLoading(false));
   }, [id]);
@@ -62,8 +63,7 @@ export default function UserProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "match_request",
-          receiverEmail: profile.email,
-          receiverName: profile.name || "ユーザー",
+          receiverId: id,
           senderName: myProfile?.name || "ユーザー",
         }),
       }).catch(console.error);

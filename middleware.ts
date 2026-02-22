@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   const session = request.cookies.get("session");
   const { pathname } = request.nextUrl;
 
-  const publicPaths = ["/login", "/signup", "/terms", "/privacy", "/about"];
+  const publicPaths = ["/login", "/signup", "/terms", "/privacy", "/about", "/explore", "/profile"];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
   if (!session && !isPublic && pathname !== "/") {

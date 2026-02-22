@@ -224,7 +224,13 @@ export default function UserProfilePage() {
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowMessageForm(true)}
+                  onClick={() => {
+                    if (!user) {
+                      router.push("/login");
+                      return;
+                    }
+                    setShowMessageForm(true);
+                  }}
                   className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
                 >
                   フレンド申請する

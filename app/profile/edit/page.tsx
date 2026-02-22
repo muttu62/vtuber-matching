@@ -8,16 +8,12 @@ import AvatarUpload from "../../../components/AvatarUpload";
 const VTUBER_GENRES = ["ゲーム", "雑談", "歌", "料理", "学習", "その他"];
 const CREATOR_GENRES = ["イラスト", "アニメーション", "動画編集", "デザイン", "作曲", "3Dモデリング", "その他"];
 
-function getGenreOptions(userType: string): string[] {
-  if (userType === "vtuber") return VTUBER_GENRES;
-  if (userType === "creator" || userType === "vtuber_creator") return CREATOR_GENRES;
-  return [...VTUBER_GENRES, ...CREATOR_GENRES];
-}
 
 type FormValues = {
   name: string;
   userType: string;
   genre: string;
+  genreCreator: string;
   activityTime: string;
   description: string;
   snsLinks: string;
@@ -28,6 +24,7 @@ const EMPTY_FORM: FormValues = {
   name: "",
   userType: "",
   genre: "",
+  genreCreator: "",
   activityTime: "",
   description: "",
   snsLinks: "",
@@ -57,6 +54,7 @@ export default function ProfileEditPage() {
             name: profile.name ?? "",
             userType: profile.userType ?? "",
             genre: profile.genre ?? "",
+            genreCreator: profile.genreCreator ?? "",
             activityTime: profile.activityTime ?? "",
             description: profile.description ?? "",
             snsLinks: profile.snsLinks ?? "",
@@ -78,8 +76,8 @@ export default function ProfileEditPage() {
     setForm((prev) => {
       const next = { ...prev, [name]: value };
       if (name === "userType") {
-        const valid = getGenreOptions(value);
-        if (!valid.includes(prev.genre)) next.genre = "";
+        next.genre = "";
+        next.genreCreator = "";
       }
       return next;
     });
@@ -175,35 +173,64 @@ export default function ProfileEditPage() {
           </div>
 
           {(form.userType === "creator" || form.userType === "vtuber_creator") && (
-            <div className="flex items-start gap-3 p-3 bg-gray-800 rounded-lg">
-              <input
-                type="checkbox"
-                id="acceptsRequests"
-                checked={acceptsRequests}
-                onChange={(e) => setAcceptsRequests(e.target.checked)}
-                className="w-4 h-4 mt-0.5 accent-purple-500 shrink-0"
-              />
-              <label htmlFor="acceptsRequests" className="text-gray-300 text-sm cursor-pointer">
-                制作依頼を受け付ける
-                <span className="block text-gray-500 text-xs mt-0.5">チェックするとユーザー一覧に表示されます</span>
-              </label>
+            <div>
+              <div className="flex items-start gap-3 p-3 bg-gray-800 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="acceptsRequests"
+                  checked={acceptsRequests}
+                  onChange={(e) => setAcceptsRequests(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 accent-purple-500 shrink-0"
+                />
+                <label htmlFor="acceptsRequests" className="text-gray-300 text-sm cursor-pointer">
+                  制作依頼を受け付ける
+                  <span className="block text-gray-500 text-xs mt-0.5">チェックするとユーザー一覧に表示されます</span>
+                </label>
+              </div>
+              {!acceptsRequests && (
+                <p className="text-red-400 text-xs mt-1">チェックが無い場合はユーザー一覧に表示されません</p>
+              )}
             </div>
           )}
 
-          <div>
-            <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>
-            <select
-              name="genre"
-              value={form.genre}
-              onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-            >
-              <option value="">選択してください</option>
-              {getGenreOptions(form.userType).map((g) => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-          </div>
+          {form.userType === "vtuber" && (
+            <div>
+              <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>
+              <select name="genre" value={form.genre} onChange={handleChange} className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
+                <option value="">選択してください</option>
+                {VTUBER_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
+              </select>
+            </div>
+          )}
+
+          {form.userType === "creator" && (
+            <div>
+              <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>
+              <select name="genre" value={form.genre} onChange={handleChange} className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
+                <option value="">選択してください</option>
+                {CREATOR_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
+              </select>
+            </div>
+          )}
+
+          {form.userType === "vtuber_creator" && (
+            <>
+              <div>
+                <label className="block text-gray-300 text-sm mb-1">活動ジャンル[VTuber]</label>
+                <select name="genre" value={form.genre} onChange={handleChange} className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
+                  <option value="">選択してください</option>
+                  {VTUBER_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-gray-300 text-sm mb-1">活動ジャンル[クリエイター]</label>
+                <select name="genreCreator" value={form.genreCreator} onChange={handleChange} className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
+                  <option value="">選択してください</option>
+                  {CREATOR_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
+                </select>
+              </div>
+            </>
+          )}
 
           <div>
             <label className="block text-gray-300 text-sm mb-1">活動時間帯</label>

@@ -131,14 +131,21 @@ export default function UserProfilePage() {
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     profile.userType === "vtuber"
                       ? "bg-blue-900/50 text-blue-300"
+                      : profile.userType === "vtuber_creator"
+                      ? "bg-yellow-500 text-black"
                       : "bg-green-900/50 text-green-300"
                   }`}>
-                    {profile.userType === "vtuber" ? "VTuber" : "クリエイター"}
+                    {profile.userType === "vtuber" ? "VTuber" : profile.userType === "vtuber_creator" ? "VTuber兼クリエイター" : "クリエイター"}
                   </span>
                 )}
                 {profile.genre && (
                   <span className="text-xs text-purple-300 bg-purple-900/40 px-2 py-1 rounded-full">
                     {profile.genre}
+                  </span>
+                )}
+                {profile.genreCreator && (
+                  <span className="text-xs text-green-300 bg-green-900/40 px-2 py-1 rounded-full">
+                    {profile.genreCreator}
                   </span>
                 )}
               </div>

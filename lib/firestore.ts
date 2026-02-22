@@ -12,6 +12,7 @@ export type UserProfile = {
   email: string;
   createdAt: string;
   userType?: "vtuber" | "creator" | "vtuber_creator";
+  genreCreator?: string;
   acceptsRequests?: boolean;
   privateContact?: string;
 };

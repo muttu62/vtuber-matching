@@ -88,7 +88,7 @@ export default function ExplorePage() {
                     user.userType === "vtuber"
                       ? "bg-blue-900/50 text-blue-300"
                       : user.userType === "vtuber_creator"
-                      ? "bg-purple-900/50 text-purple-300"
+                      ? "bg-yellow-500 text-black"
                       : "bg-green-900/50 text-green-300"
                   }`}>
                     {USER_TYPE_LABEL[user.userType]}
@@ -98,6 +98,11 @@ export default function ExplorePage() {
               {user.genre && (
                 <span className="text-xs text-purple-300 bg-purple-900/40 px-2 py-1 rounded-full w-fit">
                   {user.genre}
+                </span>
+              )}
+              {user.genreCreator && (
+                <span className="text-xs text-green-300 bg-green-900/40 px-2 py-1 rounded-full w-fit">
+                  {user.genreCreator}
                 </span>
               )}
               {user.activityTime && (

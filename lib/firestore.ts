@@ -15,6 +15,8 @@ export type UserProfile = {
   genreCreator?: string;
   acceptsRequests?: boolean;
   privateContact?: string;
+  youtubeUrl?: string;
+  youtubeTags?: string[];
 };
 
 // 他ユーザーに公開するフィールドのみ（email・privateContact を除外）

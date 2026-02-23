@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getAllUsers, PublicUserProfile } from "../../lib/firestore";
+import { getAllUsers, getUserProfile, PublicUserProfile } from "../../lib/firestore";
+import { useAuth } from "../../lib/AuthContext";
 
 type FilterTab = "all" | "vtuber" | "creator";
 
@@ -11,8 +12,15 @@ const USER_TYPE_LABEL: Record<string, string> = {
   vtuber_creator: "VTuber兼クリエイター",
 };
 
+function countShared(a: string[] | undefined, b: string[]): number {
+  if (!a || b.length === 0) return 0;
+  return a.filter((t) => b.includes(t)).length;
+}
+
 export default function ExplorePage() {
+  const { user } = useAuth();
   const [users, setUsers] = useState<PublicUserProfile[]>([]);
+  const [myTags, setMyTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("all");
 
@@ -21,6 +29,11 @@ export default function ExplorePage() {
       .then(setUsers)
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!user) { setMyTags([]); return; }
+    getUserProfile(user.uid).then((p) => setMyTags(p?.youtubeTags ?? []));
+  }, [user]);
 
   // creator のみ acceptsRequests=true の場合のみ表示（vtuber / vtuber_creator は常に表示）
   const visibleUsers = users.filter(
@@ -34,6 +47,14 @@ export default function ExplorePage() {
           if (filter === "creator") return u.userType === "creator" || u.userType === "vtuber_creator";
           return false;
         });
+
+  // ログイン済みで自分のタグがあれば共通タグ数で降順ソート
+  const displayed =
+    myTags.length > 0
+      ? [...filtered].sort(
+          (a, b) => countShared(b.youtubeTags, myTags) - countShared(a.youtubeTags, myTags)
+        )
+      : filtered;
 
   const tabs: { key: FilterTab; label: string }[] = [
     { key: "all", label: "すべて" },
@@ -62,18 +83,29 @@ export default function ExplorePage() {
         ))}
       </div>
 
+      {myTags.length > 0 && (
+        <p className="text-gray-500 text-xs mb-4">あなたのYouTubeタグとの共通数が多い順に表示しています</p>
+      )}
+
       {loading ? (
         <p className="text-gray-400">読み込み中...</p>
-      ) : filtered.length === 0 ? (
+      ) : displayed.length === 0 ? (
         <p className="text-gray-400">まだユーザーがいません</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((user) => (
-            <Link key={user.uid} href={`/profile/${user.uid}`} className="bg-gray-900 rounded-2xl p-6 flex flex-col gap-2 hover:bg-gray-800 transition-colors">
-              {user.avatarUrl ? (
+          {displayed.map((u) => {
+            const shared = countShared(u.youtubeTags, myTags);
+            return (
+            <Link key={u.uid} href={`/profile/${u.uid}`} className="bg-gray-900 rounded-2xl p-6 flex flex-col gap-2 hover:bg-gray-800 transition-colors relative">
+              {shared > 0 && (
+                <span className="absolute top-4 right-4 text-xs bg-purple-600/80 text-white px-2 py-0.5 rounded-full">
+                  共通{shared}タグ
+                </span>
+              )}
+              {u.avatarUrl ? (
                 <img
-                  src={user.avatarUrl}
-                  alt={user.name}
+                  src={u.avatarUrl}
+                  alt={u.name}
                   className="w-16 h-16 rounded-full object-cover"
                 />
               ) : (
@@ -82,37 +114,38 @@ export default function ExplorePage() {
                 </div>
               )}
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-white font-bold text-lg">{user.name || "名前未設定"}</p>
-                {user.userType && (
+                <p className="text-white font-bold text-lg">{u.name || "名前未設定"}</p>
+                {u.userType && (
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    user.userType === "vtuber"
+                    u.userType === "vtuber"
                       ? "bg-blue-900/50 text-blue-300"
-                      : user.userType === "vtuber_creator"
+                      : u.userType === "vtuber_creator"
                       ? "bg-orange-900/50 text-orange-300"
                       : "bg-green-900/50 text-green-300"
                   }`}>
-                    {USER_TYPE_LABEL[user.userType]}
+                    {USER_TYPE_LABEL[u.userType]}
                   </span>
                 )}
               </div>
-              {user.genre && (
+              {u.genre && (
                 <span className="text-xs text-purple-300 bg-purple-900/40 px-2 py-1 rounded-full w-fit">
-                  {user.genre}
+                  {u.genre}
                 </span>
               )}
-              {user.genreCreator && (
+              {u.genreCreator && (
                 <span className="text-xs text-green-300 bg-green-900/40 px-2 py-1 rounded-full w-fit">
-                  {user.genreCreator}
+                  {u.genreCreator}
                 </span>
               )}
-              {user.activityTime && (
-                <p className="text-gray-400 text-sm">活動時間: {user.activityTime}</p>
+              {u.activityTime && (
+                <p className="text-gray-400 text-sm">活動時間: {u.activityTime}</p>
               )}
-              {user.description && (
-                <p className="text-gray-300 text-sm line-clamp-3">{user.description}</p>
+              {u.description && (
+                <p className="text-gray-300 text-sm line-clamp-3">{u.description}</p>
               )}
             </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

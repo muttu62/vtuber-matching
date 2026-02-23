@@ -23,8 +23,12 @@ export default function OnboardingPage() {
     snsLinks: "",
     avatarUrl: "",
     privateContact: "",
+    youtubeUrl: "",
   });
   const [acceptsRequests, setAcceptsRequests] = useState(false);
+  const [youtubeTags, setYoutubeTags] = useState<string[]>([]);
+  const [loadingTags, setLoadingTags] = useState(false);
+  const [tagError, setTagError] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -40,6 +44,27 @@ export default function OnboardingPage() {
     });
   };
 
+  const handleFetchTags = async () => {
+    if (!form.youtubeUrl) return;
+    setLoadingTags(true);
+    setTagError("");
+    try {
+      const res = await fetch("/api/youtube", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: form.youtubeUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setTagError(data.error || "取得に失敗しました"); return; }
+      if (data.tags.length === 0) { setTagError("タグが見つかりませんでした"); return; }
+      setYoutubeTags(data.tags);
+    } catch {
+      setTagError("取得に失敗しました");
+    } finally {
+      setLoadingTags(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -51,6 +76,7 @@ export default function OnboardingPage() {
         ...form,
         userType: form.userType as "vtuber" | "creator" | "vtuber_creator" | undefined,
         acceptsRequests: isCreatorType ? acceptsRequests : false,
+        youtubeTags,
       });
       router.push("/explore");
     } catch (err: any) {
@@ -241,6 +267,38 @@ export default function OnboardingPage() {
               rows={4}
               className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 resize-none"
             />
+          </div>
+
+          <div>
+            <label className="block text-gray-300 text-sm mb-1">YouTubeチャンネルURL</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                name="youtubeUrl"
+                value={form.youtubeUrl}
+                onChange={handleChange}
+                placeholder="https://www.youtube.com/@channelname"
+                className="flex-1 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+              />
+              <button
+                type="button"
+                onClick={handleFetchTags}
+                disabled={loadingTags || !form.youtubeUrl}
+                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+              >
+                {loadingTags ? "取得中..." : "タグを自動取得"}
+              </button>
+            </div>
+            {tagError && <p className="text-red-400 text-xs mt-1">{tagError}</p>}
+            {youtubeTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {youtubeTags.map((tag) => (
+                  <span key={tag} className="text-xs bg-red-900/40 text-red-300 px-2 py-1 rounded-full">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

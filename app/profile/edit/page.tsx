@@ -18,6 +18,7 @@ type FormValues = {
   description: string;
   snsLinks: string;
   avatarUrl: string;
+  youtubeUrl: string;
 };
 
 const EMPTY_FORM: FormValues = {
@@ -29,6 +30,7 @@ const EMPTY_FORM: FormValues = {
   description: "",
   snsLinks: "",
   avatarUrl: "",
+  youtubeUrl: "",
 };
 
 export default function ProfileEditPage() {
@@ -40,6 +42,11 @@ export default function ProfileEditPage() {
 
   const [acceptsRequests, setAcceptsRequests] = useState(false);
   const savedAcceptsRequestsRef = useRef(false);
+
+  const [youtubeTags, setYoutubeTags] = useState<string[]>([]);
+  const savedYoutubeTagsRef = useRef<string[]>([]);
+  const [loadingTags, setLoadingTags] = useState(false);
+  const [tagError, setTagError] = useState("");
 
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -59,11 +66,14 @@ export default function ProfileEditPage() {
             description: profile.description ?? "",
             snsLinks: profile.snsLinks ?? "",
             avatarUrl: profile.avatarUrl ?? "",
+            youtubeUrl: profile.youtubeUrl ?? "",
           };
           setForm(values);
           savedRef.current = values;
           setAcceptsRequests(profile.acceptsRequests ?? false);
           savedAcceptsRequestsRef.current = profile.acceptsRequests ?? false;
+          setYoutubeTags(profile.youtubeTags ?? []);
+          savedYoutubeTagsRef.current = profile.youtubeTags ?? [];
         }
       })
       .finally(() => setFetching(false));
@@ -81,6 +91,27 @@ export default function ProfileEditPage() {
       }
       return next;
     });
+  };
+
+  const handleFetchTags = async () => {
+    if (!form.youtubeUrl) return;
+    setLoadingTags(true);
+    setTagError("");
+    try {
+      const res = await fetch("/api/youtube", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: form.youtubeUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setTagError(data.error || "取得に失敗しました"); return; }
+      if (data.tags.length === 0) { setTagError("タグが見つかりませんでした"); return; }
+      setYoutubeTags(data.tags);
+    } catch {
+      setTagError("取得に失敗しました");
+    } finally {
+      setLoadingTags(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,11 +138,16 @@ export default function ProfileEditPage() {
       if (!isCreatorType && wasCreatorType) {
         updates.acceptsRequests = false;
       }
+      // youtubeTags が変わっていれば更新
+      if (JSON.stringify(youtubeTags) !== JSON.stringify(savedYoutubeTagsRef.current)) {
+        updates.youtubeTags = youtubeTags;
+      }
 
       if (Object.keys(updates).length > 0) {
         await updateUserProfile(user.uid, updates);
         savedRef.current = { ...form };
         savedAcceptsRequestsRef.current = acceptsRequests;
+        savedYoutubeTagsRef.current = youtubeTags;
       }
 
       router.push("/mypage");
@@ -259,6 +295,38 @@ export default function ProfileEditPage() {
               rows={4}
               className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 resize-none"
             />
+          </div>
+
+          <div>
+            <label className="block text-gray-300 text-sm mb-1">YouTubeチャンネルURL</label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                name="youtubeUrl"
+                value={form.youtubeUrl}
+                onChange={handleChange}
+                placeholder="https://www.youtube.com/@channelname"
+                className="flex-1 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+              />
+              <button
+                type="button"
+                onClick={handleFetchTags}
+                disabled={loadingTags || !form.youtubeUrl}
+                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+              >
+                {loadingTags ? "取得中..." : "タグを自動取得"}
+              </button>
+            </div>
+            {tagError && <p className="text-red-400 text-xs mt-1">{tagError}</p>}
+            {youtubeTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {youtubeTags.map((tag) => (
+                  <span key={tag} className="text-xs bg-red-900/40 text-red-300 px-2 py-1 rounded-full">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>

@@ -12,6 +12,12 @@ import {
   Match,
 } from "../../../lib/firestore";
 
+type Video = {
+  title: string;
+  thumbnailUrl: string;
+  videoUrl: string;
+};
+
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -24,6 +30,7 @@ export default function UserProfilePage() {
   const [showMessageForm, setShowMessageForm] = useState(false);
   const [message, setMessage] = useState("");
   const [limitReached, setLimitReached] = useState(false);
+  const [latestVideos, setLatestVideos] = useState<Video[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -43,6 +50,18 @@ export default function UserProfilePage() {
       setLimitReached(matches.length >= 1);
     });
   }, [user, id]);
+
+  useEffect(() => {
+    if (!profile?.youtubeUrl) return;
+    fetch("/api/youtube", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: profile.youtubeUrl, type: "videos" }),
+    })
+      .then((r) => r.json())
+      .then((data) => { if (data.videos) setLatestVideos(data.videos); })
+      .catch(console.error);
+  }, [profile]);
 
   const handleSendMatch = async () => {
     if (!user || !id || !profile) return;
@@ -184,6 +203,41 @@ export default function UserProfilePage() {
               ) : (
                 <p className="text-gray-200 break-all">{profile.snsLinks}</p>
               )}
+            </div>
+          )}
+
+          {/* 最新の動画 */}
+          {latestVideos.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-3">最新の動画</h2>
+              <div className="grid grid-cols-3 gap-2">
+                {latestVideos.map((video) => (
+                  <a
+                    key={video.videoUrl}
+                    href={video.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group"
+                  >
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-800">
+                      <img
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
+                      />
+                      {/* 再生アイコン */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 text-xs mt-1 line-clamp-2 leading-tight">{video.title}</p>
+                  </a>
+                ))}
+              </div>
             </div>
           )}
 

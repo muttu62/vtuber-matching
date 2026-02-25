@@ -55,8 +55,35 @@ function parseUrl(url: string): { type: "handle" | "id" | "custom"; value: strin
   return null;
 }
 
+// チャンネルIDを解決する共通関数
+async function resolveChannelId(
+  parsed: NonNullable<ReturnType<typeof parseUrl>>,
+  base: string,
+  apiKey: string
+): Promise<string | null> {
+  if (parsed.type === "handle") {
+    const res = await fetch(
+      `${base}/channels?part=id&forHandle=${encodeURIComponent(parsed.value)}&key=${apiKey}`
+    );
+    const data = await res.json();
+    return data.items?.[0]?.id ?? null;
+  } else if (parsed.type === "id") {
+    return parsed.value;
+  } else {
+    const searchRes = await fetch(
+      `${base}/search?part=snippet&type=channel&q=${encodeURIComponent(parsed.value)}&maxResults=1&key=${apiKey}`
+    );
+    const searchData = await searchRes.json();
+    return searchData.items?.[0]?.id?.channelId ?? null;
+  }
+}
+
 export async function POST(req: NextRequest) {
-  const { url } = await req.json();
+  console.log("[youtube] YOUTUBE_API_KEY exists:", !!process.env.YOUTUBE_API_KEY);
+  console.log("[youtube] YOUTUBE_API_KEY length:", process.env.YOUTUBE_API_KEY?.length ?? 0);
+  console.log("[youtube] NODE_ENV:", process.env.NODE_ENV);
+
+  const { url, type = "tags" } = await req.json();
   if (!url) return NextResponse.json({ error: "URLを入力してください" }, { status: 400 });
 
   const apiKey = process.env.YOUTUBE_API_KEY;
@@ -66,6 +93,32 @@ export async function POST(req: NextRequest) {
   if (!parsed) return NextResponse.json({ error: "YouTubeチャンネルURLが正しくありません" }, { status: 400 });
 
   const base = "https://www.googleapis.com/youtube/v3";
+
+  // --- 最新動画取得モード ---
+  if (type === "videos") {
+    const channelId = await resolveChannelId(parsed, base, apiKey);
+    if (!channelId) return NextResponse.json({ error: "チャンネルが見つかりませんでした" }, { status: 404 });
+
+    const searchRes = await fetch(
+      `${base}/search?part=snippet&channelId=${channelId}&order=date&maxResults=3&type=video&key=${apiKey}`
+    );
+    const searchData = await searchRes.json();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const videos = (searchData.items ?? []).map((item: any) => ({
+      title: item.snippet.title as string,
+      thumbnailUrl: (
+        item.snippet.thumbnails?.high?.url ??
+        item.snippet.thumbnails?.medium?.url ??
+        item.snippet.thumbnails?.default?.url
+      ) as string,
+      videoUrl: `https://www.youtube.com/watch?v=${item.id.videoId}` as string,
+    }));
+
+    return NextResponse.json({ videos });
+  }
+
+  // --- タグ取得モード（デフォルト） ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let channelData: any;
 

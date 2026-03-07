@@ -124,7 +124,7 @@ export default function PersonalityTestPage() {
   // 結果画面
   if (step === 9 && result) {
     const shareText = encodeURIComponent(
-      `私は【${result.emoji}${result.name}】でした！🎉 Vクリマッチングで相性の良いVTuberを探そう👇 https://v-kuri.com/personality-test #Vクリ #VTuber診断`
+      `私は【${result.emoji}${result.name}】でした！🎉 Vクリマッチングで相性の良いVTuberを探そう👇 https://v-kuri.com/personality-test #Vクリマッチング #VTuber`
     );
     return (
       <div className="min-h-screen bg-gray-950 py-12 px-4">

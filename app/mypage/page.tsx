@@ -336,11 +336,16 @@ export default function MyPage() {
               非公開の連絡先を編集
             </button>
           </div>
+          {profile?.personalityType && (
+            <p className="text-center text-purple-300 text-sm">
+              あなたは【{profile.personalityType}】です！
+            </p>
+          )}
           <button
             onClick={() => router.push("/personality-test")}
             className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors border border-purple-800 hover:border-purple-600"
           >
-            🎭 性格診断を受ける
+            🎭 {profile?.personalityType ? "性格診断をやり直す" : "性格診断で相性のいい人を探す"}
           </button>
           {user && (
             <a

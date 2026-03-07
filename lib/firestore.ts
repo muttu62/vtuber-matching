@@ -21,6 +21,7 @@ export type UserProfile = {
   collaboStyle?: string;
   activityGoal?: string;
   personalityType?: string;
+  matchCount?: number;
 };
 
 // 他ユーザーに公開するフィールドのみ（email・privateContact を除外）

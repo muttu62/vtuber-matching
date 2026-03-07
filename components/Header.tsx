@@ -61,7 +61,7 @@ export default function Header() {
     <header className="bg-gray-900 border-b border-gray-800">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/about" className="text-white font-bold text-lg tracking-tight">
-          Vクリ
+          <img src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp" alt="Vクリ" className="h-8 w-auto" />
         </Link>
         <nav ref={navRef} className="flex items-center gap-1">
           {/* 探す（公開） */}

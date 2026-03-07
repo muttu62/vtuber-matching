@@ -27,8 +27,6 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [existingMatch, setExistingMatch] = useState<Match | null>(null);
   const [sending, setSending] = useState(false);
-  const [showMessageForm, setShowMessageForm] = useState(false);
-  const [message, setMessage] = useState("");
   const [limitReached, setLimitReached] = useState(false);
   const [latestVideos, setLatestVideos] = useState<Video[]>([]);
 
@@ -67,7 +65,7 @@ export default function UserProfilePage() {
     if (!user || !id || !profile) return;
     setSending(true);
     try {
-      await sendMatchRequest(user.uid, id, message.trim() || undefined);
+      await sendMatchRequest(user.uid, id);
       setExistingMatch({
         id: "",
         sender_id: user.uid,
@@ -187,6 +185,31 @@ export default function UserProfilePage() {
             </div>
           )}
 
+          {/* コラボスタイルバッジ */}
+          {profile.collaboStyle && (
+            <div className="mb-5">
+              <span className="text-xs bg-purple-900/40 text-purple-300 px-3 py-1.5 rounded-full">
+                コラボスタイル：{profile.collaboStyle}
+              </span>
+            </div>
+          )}
+
+          {/* 一緒にやりたいこと */}
+          {profile.collaboWant && (
+            <div className="mb-5">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">一緒にやりたいこと</h2>
+              <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{profile.collaboWant}</p>
+            </div>
+          )}
+
+          {/* 活動目標 */}
+          {profile.activityGoal && (
+            <div className="mb-5">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">活動目標</h2>
+              <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{profile.activityGoal}</p>
+            </div>
+          )}
+
           {/* SNSリンク */}
           {profile.snsLinks && (
             <div className="mb-6">
@@ -267,34 +290,6 @@ export default function UserProfilePage() {
                 <p className="text-center text-yellow-400 text-sm py-3">
                   本日の申請可能枠（1/1）は使用済みです
                 </p>
-              ) : showMessageForm ? (
-                <div className="space-y-3">
-                  <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="一言メッセージを添えられます（任意）"
-                    rows={3}
-                    maxLength={200}
-                    className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 resize-none text-sm"
-                  />
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => { setShowMessageForm(false); setMessage(""); }}
-                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2.5 rounded-lg transition-colors"
-                    >
-                      キャンセル
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSendMatch}
-                      disabled={sending}
-                      className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold py-2.5 rounded-lg transition-colors"
-                    >
-                      {sending ? "送信中..." : "送信する"}
-                    </button>
-                  </div>
-                </div>
               ) : (
                 <button
                   onClick={() => {
@@ -302,11 +297,12 @@ export default function UserProfilePage() {
                       router.push("/login");
                       return;
                     }
-                    setShowMessageForm(true);
+                    handleSendMatch();
                   }}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
+                  disabled={sending}
+                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-colors"
                 >
-                  フレンド申請する
+                  {sending ? "送信中..." : "フレンド申請する"}
                 </button>
               )}
             </>

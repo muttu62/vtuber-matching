@@ -336,6 +336,12 @@ export default function MyPage() {
               非公開の連絡先を編集
             </button>
           </div>
+          <button
+            onClick={() => router.push("/personality-test")}
+            className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 rounded-lg transition-colors border border-purple-800 hover:border-purple-600"
+          >
+            🎭 性格診断を受ける
+          </button>
           {user && (
             <a
               href={`https://twitter.com/intent/tweet?text=%E3%80%90%E3%82%B3%E3%83%A9%E3%83%9C%E5%8B%9F%E9%9B%86%E4%B8%AD%E3%80%91V%E3%82%AF%E3%83%AA%E3%81%A7%E3%82%B3%E3%83%A9%E3%83%9C%E7%9B%B8%E6%89%8B%E3%82%92%E6%8E%A2%E3%81%97%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%EF%BC%81%E6%B0%97%E3%81%AB%E3%81%AA%E3%82%8B%E6%96%B9%E3%81%AF%E3%81%93%E3%81%A1%E3%82%89%E3%81%8B%E3%82%89%E3%81%A9%E3%81%86%E3%81%9E%F0%9F%91%87%0Ahttps%3A%2F%2Fv-kuri.com%2Fprofile%2F${user.uid}%0A%23Vtuber%E5%8B%9F%E9%9B%86%20%23%E3%82%B3%E3%83%A9%E3%83%9C%E5%8B%9F%E9%9B%86%20%23%E5%80%8B%E4%BA%BAvtuber`}

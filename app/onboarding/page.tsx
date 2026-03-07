@@ -24,6 +24,9 @@ export default function OnboardingPage() {
     avatarUrl: "",
     privateContact: "",
     youtubeUrl: "",
+    collaboWant: "",
+    collaboStyle: "",
+    activityGoal: "",
   });
   const [acceptsRequests, setAcceptsRequests] = useState(false);
   const [youtubeTags, setYoutubeTags] = useState<string[]>([]);
@@ -78,7 +81,7 @@ export default function OnboardingPage() {
         acceptsRequests: isCreatorType ? acceptsRequests : false,
         youtubeTags,
       });
-      router.push("/explore");
+      router.push("/personality-test");
     } catch (err: any) {
       setError("保存に失敗しました: " + err.message);
     } finally {
@@ -299,6 +302,51 @@ export default function OnboardingPage() {
                 ))}
               </div>
             )}
+          </div>
+
+          <div>
+            <label className="block text-gray-300 text-sm mb-1">一緒にやりたいこと</label>
+            <textarea
+              name="collaboWant"
+              value={form.collaboWant}
+              onChange={handleChange}
+              placeholder="どんな人とどんな配信をしたいですか？"
+              rows={3}
+              maxLength={200}
+              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-300 text-sm mb-2">コラボのお誘い</label>
+            <div className="flex flex-col gap-2">
+              {["いつでもOK！", "ある程度仲良くなってから"].map((option) => (
+                <label key={option} className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                  <input
+                    type="radio"
+                    name="collaboStyle"
+                    value={option}
+                    checked={form.collaboStyle === option}
+                    onChange={handleChange}
+                    className="w-4 h-4 accent-purple-500"
+                  />
+                  <span className="text-gray-300 text-sm">{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-gray-300 text-sm mb-1">活動目標</label>
+            <textarea
+              name="activityGoal"
+              value={form.activityGoal}
+              onChange={handleChange}
+              placeholder="今の活動目標はなんですか？"
+              rows={3}
+              maxLength={200}
+              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 resize-none"
+            />
           </div>
 
           <div>

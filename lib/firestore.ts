@@ -17,6 +17,10 @@ export type UserProfile = {
   privateContact?: string;
   youtubeUrl?: string;
   youtubeTags?: string[];
+  collaboWant?: string;
+  collaboStyle?: string;
+  activityGoal?: string;
+  personalityType?: string;
 };
 
 // 他ユーザーに公開するフィールドのみ（email・privateContact を除外）
@@ -70,12 +74,11 @@ export type Match = {
   created_at: string;
 };
 
-export async function sendMatchRequest(senderId: string, receiverId: string, message?: string): Promise<void> {
+export async function sendMatchRequest(senderId: string, receiverId: string): Promise<void> {
   await addDoc(collection(db, "matches"), {
     sender_id: senderId,
     receiver_id: receiverId,
     status: "pending",
-    message: message ?? "",
     created_at: new Date().toISOString(),
   });
 }

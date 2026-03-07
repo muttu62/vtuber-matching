@@ -12,6 +12,9 @@ export default function Footer() {
           <Link href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
             プライバシーポリシー
           </Link>
+          <Link href="/contact" className="text-gray-400 hover:text-white text-sm transition-colors">
+            お問い合わせ・ご意見箱
+          </Link>
         </nav>
       </div>
     </footer>

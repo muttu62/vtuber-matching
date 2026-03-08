@@ -59,15 +59,15 @@ export default function Header() {
 
   return (
     <header className="bg-gray-900 border-b border-gray-800">
-      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="max-w-5xl mx-auto px-4 py-2 flex flex-col md:flex-row md:h-14 md:items-center justify-between gap-1">
         <Link href="/about" className="text-white font-bold text-lg tracking-tight">
           <img src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp" alt="Vクリ" className="h-8 w-auto" />
         </Link>
-        <nav ref={navRef} className="flex items-center gap-1">
+        <nav ref={navRef} className="flex flex-col md:flex-row md:items-center gap-1">
           {/* 探す（公開） */}
           <Link
             href="/explore"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-center md:text-left ${
               pathname === "/explore"
                 ? "bg-purple-600 text-white"
                 : "text-gray-400 hover:text-white hover:bg-gray-800"
@@ -82,7 +82,7 @@ export default function Header() {
               <Link
                 key={href}
                 href={href}
-                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-center md:text-left ${
                   pathname === href
                     ? "bg-purple-600 text-white"
                     : "text-gray-400 hover:text-white hover:bg-gray-800"
@@ -99,7 +99,7 @@ export default function Header() {
               <button
                 key={href}
                 onClick={() => setShowPopup((prev) => !prev)}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap text-center md:text-left"
               >
                 {label}
               </button>

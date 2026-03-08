@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "../../lib/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [unverified, setUnverified] = useState(false);
   const [resendDone, setResendDone] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams.get("verified") === "true";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +48,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-950">
       <div className="bg-gray-900 p-8 rounded-2xl w-full max-w-md">
         <h1 className="text-2xl font-bold text-white mb-6">ログイン</h1>
+        {verified && (
+          <div className="bg-green-900/40 border border-green-700 rounded-lg p-4 mb-4">
+            <p className="text-green-400 text-sm">メールアドレスの確認が完了しました。ログインしてください✨</p>
+          </div>
+        )}
+
         {error && <p className="text-red-400 mb-4 text-sm">{error}</p>}
 
         {unverified && (

@@ -10,7 +10,7 @@ export default function AboutPage() {
           <img
             src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp"
             alt="Vクリマッチング"
-            className="h-12 w-auto mx-auto mb-6"
+            className="h-24 w-auto mx-auto mb-6"
           />
           <p className="text-xl text-gray-300 leading-relaxed">
             「<span className="text-purple-400 font-semibold">VTuber</span>と<span className="text-purple-400 font-semibold">VTuber</span>」

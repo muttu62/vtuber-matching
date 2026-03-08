@@ -9,14 +9,9 @@ import {
   getMatchBetween,
   sendMatchRequest,
   getSentMatchesToday,
+  toTagArray,
   Match,
 } from "../../../lib/firestore";
-
-type Video = {
-  title: string;
-  thumbnailUrl: string;
-  videoUrl: string;
-};
 
 export default function UserProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +23,6 @@ export default function UserProfilePage() {
   const [existingMatch, setExistingMatch] = useState<Match | null>(null);
   const [sending, setSending] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
-  const [latestVideos, setLatestVideos] = useState<Video[]>([]);
 
   useEffect(() => {
     if (!id) return;
@@ -49,18 +43,6 @@ export default function UserProfilePage() {
     });
   }, [user, id]);
 
-  useEffect(() => {
-    if (!profile?.youtubeUrl) return;
-    fetch("/api/youtube", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: profile.youtubeUrl, type: "videos" }),
-    })
-      .then((r) => r.json())
-      .then((data) => { if (data.videos) setLatestVideos(data.videos); })
-      .catch(console.error);
-  }, [profile]);
-
   const handleSendMatch = async () => {
     if (!user || !id || !profile) return;
     setSending(true);
@@ -73,7 +55,6 @@ export default function UserProfilePage() {
         status: "pending",
         created_at: new Date().toISOString(),
       });
-      // 申請先へ通知メール（失敗してもブロックしない）
       const myProfile = await getUserProfile(user.uid);
       fetch("/api/send-email", {
         method: "POST",
@@ -115,6 +96,29 @@ export default function UserProfilePage() {
 
   const isOwnProfile = user?.uid === id;
 
+  // 非公開ユーザーは本人以外に表示しない
+  if (!isOwnProfile && profile.isPublic === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <div className="text-center">
+          <p className="text-4xl mb-4">🔒</p>
+          <p className="text-white font-bold mb-2">このユーザーは非公開です</p>
+          <p className="text-gray-400 text-sm mb-6">プロフィールを閲覧できません</p>
+          <button
+            onClick={() => router.push("/explore")}
+            className="text-purple-400 hover:underline text-sm"
+          >
+            一覧に戻る
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const genreTags = toTagArray(profile.genre);
+  const genreCreatorTags = toTagArray(profile.genreCreator);
+  const activityTimeTags = toTagArray(profile.activityTime);
+
   return (
     <div className="min-h-screen bg-gray-950 py-12 px-4">
       <div className="max-w-lg mx-auto">
@@ -155,25 +159,31 @@ export default function UserProfilePage() {
                     {profile.userType === "vtuber" ? "VTuber" : profile.userType === "vtuber_creator" ? "VTuber兼クリエイター" : "クリエイター"}
                   </span>
                 )}
-                {profile.genre && (
-                  <span className="text-xs text-purple-300 bg-purple-900/40 px-2 py-1 rounded-full">
-                    {profile.genre}
+                {genreTags.map((g) => (
+                  <span key={g} className="text-xs text-purple-300 bg-purple-900/40 px-2 py-0.5 rounded-full">
+                    {g}
                   </span>
-                )}
-                {profile.genreCreator && (
-                  <span className="text-xs text-green-300 bg-green-900/40 px-2 py-1 rounded-full">
-                    {profile.genreCreator}
+                ))}
+                {genreCreatorTags.map((g) => (
+                  <span key={g} className="text-xs text-green-300 bg-green-900/40 px-2 py-0.5 rounded-full">
+                    {g}
                   </span>
-                )}
+                ))}
               </div>
             </div>
           </div>
 
           {/* 活動時間帯 */}
-          {profile.activityTime && (
+          {activityTimeTags.length > 0 && (
             <div className="mb-5">
               <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">活動時間帯</h2>
-              <p className="text-white">{profile.activityTime}</p>
+              <div className="flex flex-wrap gap-1">
+                {activityTimeTags.map((t) => (
+                  <span key={t} className="text-xs text-gray-300 bg-gray-800 px-2 py-0.5 rounded-full">
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
@@ -210,10 +220,10 @@ export default function UserProfilePage() {
             </div>
           )}
 
-          {/* SNSリンク */}
+          {/* 関連リンク */}
           {profile.snsLinks && (
             <div className="mb-6">
-              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">SNSリンク</h2>
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">関連リンク</h2>
               {profile.snsLinks.startsWith("http") ? (
                 <a
                   href={profile.snsLinks}
@@ -230,11 +240,11 @@ export default function UserProfilePage() {
           )}
 
           {/* 最新の動画 */}
-          {latestVideos.length > 0 && (
+          {profile.youtubeVideos && profile.youtubeVideos.length > 0 && (
             <div className="mb-6">
               <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-3">最新の動画</h2>
               <div className="grid grid-cols-3 gap-2">
-                {latestVideos.map((video) => (
+                {profile.youtubeVideos.map((video) => (
                   <a
                     key={video.videoUrl}
                     href={video.videoUrl}
@@ -248,7 +258,6 @@ export default function UserProfilePage() {
                         alt={video.title}
                         className="w-full h-full object-cover group-hover:opacity-75 transition-opacity"
                       />
-                      {/* 再生アイコン */}
                       <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="w-8 h-8 rounded-full bg-black/60 flex items-center justify-center">
                           <svg className="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 20 20">

@@ -4,15 +4,15 @@ import { db } from "./firebase";
 export type UserProfile = {
   uid: string;
   name: string;
-  genre: string;
-  activityTime: string;
+  genre?: string | string[];
+  activityTime?: string | string[];
   description: string;
   snsLinks: string;
   avatarUrl: string;
   email: string;
   createdAt: string;
   userType?: "vtuber" | "creator" | "vtuber_creator";
-  genreCreator?: string;
+  genreCreator?: string | string[];
   acceptsRequests?: boolean;
   privateContact?: string;
   youtubeUrl?: string;
@@ -22,6 +22,9 @@ export type UserProfile = {
   activityGoal?: string;
   personalityType?: string;
   matchCount?: number;
+  youtubeVideos?: { title: string; thumbnailUrl: string; videoUrl: string }[];
+  youtubeVideosCachedAt?: string;
+  isPublic?: boolean;
 };
 
 // 他ユーザーに公開するフィールドのみ（email・privateContact を除外）
@@ -37,12 +40,13 @@ export async function createUserProfile(uid: string, email: string) {
     uid,
     email,
     name: "",
-    genre: "",
-    activityTime: "",
+    genre: [],
+    activityTime: [],
     description: "",
     snsLinks: "",
     avatarUrl: "",
     createdAt: new Date().toISOString(),
+    isPublic: true,
   });
 }
 
@@ -121,4 +125,10 @@ export async function getSentMatchesToday(uid: string): Promise<Match[]> {
 
 export async function updateMatchStatus(matchId: string, status: Match["status"]): Promise<void> {
   await updateDoc(doc(db, "matches", matchId), { status });
+}
+
+// genre/activityTime の string | string[] を string[] に正規化
+export function toTagArray(value: string | string[] | undefined): string[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value : value ? [value] : [];
 }

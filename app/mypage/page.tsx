@@ -10,7 +10,7 @@ import {
 } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { useAuth } from "../../lib/AuthContext";
-import { getUserProfile, updateUserProfile, UserProfile } from "../../lib/firestore";
+import { getUserProfile, updateUserProfile, toTagArray, UserProfile } from "../../lib/firestore";
 
 export default function MyPage() {
   const { user, loading } = useAuth();
@@ -18,10 +18,6 @@ export default function MyPage() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [fetching, setFetching] = useState(true);
-
-  const [editingContact, setEditingContact] = useState(false);
-  const [contactInput, setContactInput] = useState("");
-  const [savingContact, setSavingContact] = useState(false);
 
   // パスワード変更
   const [showPasswordForm, setShowPasswordForm] = useState(false);
@@ -40,10 +36,49 @@ export default function MyPage() {
   const [emSuccess, setEmSuccess] = useState("");
   const [savingEm, setSavingEm] = useState(false);
 
+  // 非公開の連絡先変更
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [contactInput, setContactInput] = useState("");
+  const [savingContact, setSavingContact] = useState(false);
+
+  // アカウント公開設定
+  const [savingPublic, setSavingPublic] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     getUserProfile(user.uid)
-      .then(setProfile)
+      .then((p) => {
+        setProfile(p);
+        // YouTubeキャッシュが未設定 or 7日以上経過していればバックグラウンドで更新
+        if (p?.youtubeUrl) {
+          const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+          const cachedAt = p.youtubeVideosCachedAt ? new Date(p.youtubeVideosCachedAt).getTime() : 0;
+          if (Date.now() - cachedAt > SEVEN_DAYS_MS) {
+            (async () => {
+              try {
+                const token = await user.getIdToken();
+                const res = await fetch("/api/youtube", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ url: p.youtubeUrl, type: "videos" }),
+                });
+                const data = await res.json();
+                if (data.videos) {
+                  await updateUserProfile(user.uid, {
+                    youtubeVideos: data.videos,
+                    youtubeVideosCachedAt: new Date().toISOString(),
+                  });
+                }
+              } catch (e) {
+                console.error("[youtube cache]", e);
+              }
+            })();
+          }
+        }
+      })
       .finally(() => setFetching(false));
   }, [user]);
 
@@ -97,22 +132,34 @@ export default function MyPage() {
     }
   };
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    document.cookie = "session=; path=/; max-age=0";
-    router.push("/login");
-  };
-
   const handleSaveContact = async () => {
     if (!user) return;
     setSavingContact(true);
     try {
       await updateUserProfile(user.uid, { privateContact: contactInput.trim() });
       setProfile((prev) => prev ? { ...prev, privateContact: contactInput.trim() } : prev);
-      setEditingContact(false);
+      setShowContactForm(false);
     } finally {
       setSavingContact(false);
     }
+  };
+
+  const handleTogglePublic = async () => {
+    if (!user || !profile) return;
+    const next = !(profile.isPublic ?? true);
+    setSavingPublic(true);
+    try {
+      await updateUserProfile(user.uid, { isPublic: next });
+      setProfile((prev) => prev ? { ...prev, isPublic: next } : prev);
+    } finally {
+      setSavingPublic(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    document.cookie = "session=; path=/; max-age=0";
+    router.push("/login");
   };
 
   if (loading || fetching) {
@@ -122,6 +169,10 @@ export default function MyPage() {
       </div>
     );
   }
+
+  const genreTags = toTagArray(profile?.genre);
+  const activityTimeTags = toTagArray(profile?.activityTime);
+  const isPublic = profile?.isPublic ?? true;
 
   return (
     <div className="min-h-screen bg-gray-950 py-12 px-4">
@@ -146,19 +197,29 @@ export default function MyPage() {
               <p className="text-2xl font-bold text-white">
                 {profile?.name || "名前未設定"}
               </p>
-              {profile?.genre && (
-                <span className="text-xs text-purple-300 bg-purple-900/40 px-2 py-1 rounded-full inline-block mt-1">
-                  {profile.genre}
-                </span>
+              {genreTags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {genreTags.map((g) => (
+                    <span key={g} className="text-xs text-purple-300 bg-purple-900/40 px-2 py-0.5 rounded-full">
+                      {g}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
           </div>
 
           {/* 活動時間帯 */}
-          {profile?.activityTime && (
+          {activityTimeTags.length > 0 && (
             <div className="mb-4">
               <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">活動時間帯</h2>
-              <p className="text-white">{profile.activityTime}</p>
+              <div className="flex flex-wrap gap-1">
+                {activityTimeTags.map((t) => (
+                  <span key={t} className="text-xs text-gray-300 bg-gray-800 px-2 py-0.5 rounded-full">
+                    {t}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
@@ -170,10 +231,10 @@ export default function MyPage() {
             </div>
           )}
 
-          {/* SNSリンク */}
+          {/* 関連リンク */}
           {profile?.snsLinks && (
             <div className="mb-4">
-              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">SNSリンク</h2>
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">関連リンク</h2>
               {profile.snsLinks.startsWith("http") ? (
                 <a
                   href={profile.snsLinks}
@@ -189,42 +250,12 @@ export default function MyPage() {
             </div>
           )}
 
-          {/* 非公開の連絡先 */}
-          <div id="private-contact-section" className="border-t border-gray-800 pt-4">
+          {/* 非公開の連絡先（表示のみ） */}
+          <div className="border-t border-gray-800 pt-4">
             <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">非公開の連絡先</h2>
-            <p className="text-gray-500 text-xs mb-3">
-              マッチング成立した相手にのみ公開されます。Discordユーザー名がおすすめです。
+            <p className={`text-sm ${profile?.privateContact ? "text-white" : "text-gray-500"}`}>
+              {profile?.privateContact || "未設定"}
             </p>
-            {editingContact ? (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={contactInput}
-                  onChange={(e) => setContactInput(e.target.value)}
-                  placeholder="例: username / Discord: username"
-                  className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setEditingContact(false)}
-                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-sm font-bold py-2 rounded-lg transition-colors"
-                  >
-                    キャンセル
-                  </button>
-                  <button
-                    onClick={handleSaveContact}
-                    disabled={savingContact}
-                    className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition-colors"
-                  >
-                    {savingContact ? "保存中..." : "保存する"}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className={`text-sm ${profile?.privateContact ? "text-white" : "text-gray-500"}`}>
-                {profile?.privateContact || "未設定"}
-              </p>
-            )}
           </div>
         </div>
 
@@ -316,26 +347,72 @@ export default function MyPage() {
           )}
         </div>
 
-        {/* ボタン群 */}
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-3">
-            <button
-              onClick={() => router.push("/profile/edit")}
-              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
-            >
-              公開プロフィールを編集
-            </button>
+        {/* 非公開の連絡先変更 */}
+        <div className="bg-gray-900 rounded-2xl p-6 mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-white font-bold">非公開の連絡先変更</h2>
             <button
               onClick={() => {
                 setContactInput(profile?.privateContact ?? "");
-                setEditingContact(true);
-                document.getElementById("private-contact-section")?.scrollIntoView({ behavior: "smooth" });
+                setShowContactForm((v) => !v);
               }}
-              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
+              className="text-purple-400 hover:text-purple-300 text-sm"
             >
-              非公開の連絡先を編集
+              {showContactForm ? "閉じる" : "変更する"}
             </button>
           </div>
+          <p className="text-gray-500 text-xs">マッチング成立した相手にのみ公開されます</p>
+          {showContactForm && (
+            <div className="mt-3 space-y-2">
+              <input
+                type="text"
+                value={contactInput}
+                onChange={(e) => setContactInput(e.target.value)}
+                placeholder="例: Discord: username / @X_username"
+                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+              />
+              <button
+                onClick={handleSaveContact}
+                disabled={savingContact}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition-colors"
+              >
+                {savingContact ? "保存中..." : "保存する"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* アカウント公開設定 */}
+        <div className="bg-gray-900 rounded-2xl p-6 mb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-white font-bold">アカウントを非公開にする</h2>
+              <p className="text-gray-500 text-xs mt-0.5">
+                {isPublic ? "現在：公開中（ユーザー一覧に表示されています）" : "現在：非公開（ユーザー一覧に表示されていません）"}
+              </p>
+            </div>
+            <button
+              onClick={handleTogglePublic}
+              disabled={savingPublic}
+              className={`relative w-12 h-6 rounded-full transition-colors disabled:opacity-50 ${
+                !isPublic ? "bg-purple-600" : "bg-gray-600"
+              }`}
+            >
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                !isPublic ? "translate-x-7" : "translate-x-1"
+              }`} />
+            </button>
+          </div>
+        </div>
+
+        {/* ボタン群 */}
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => router.push("/profile/edit")}
+            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
+          >
+            公開プロフィールを編集
+          </button>
           {profile?.personalityType && (
             <p className="text-center text-purple-300 text-sm">
               あなたは【{profile.personalityType}】です！

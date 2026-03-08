@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/AuthContext";
 import { updateUserProfile } from "../../lib/firestore";
 import AvatarUpload from "../../components/AvatarUpload";
+import TagInput from "../../components/TagInput";
 
 const VTUBER_GENRES = ["ゲーム", "雑談", "歌", "料理", "学習", "その他"];
 const CREATOR_GENRES = ["イラスト", "アニメーション", "動画編集", "デザイン", "作曲", "3Dモデリング", "その他"];
-
+const ACTIVITY_TIMES = ["朝（6〜12時）", "昼（12〜18時）", "夜（18〜24時）", "深夜（0〜6時）", "不定期"];
 
 export default function OnboardingPage() {
   const { user, loading } = useAuth();
@@ -16,9 +17,6 @@ export default function OnboardingPage() {
   const [form, setForm] = useState({
     name: "",
     userType: "",
-    genre: "",
-    genreCreator: "",
-    activityTime: "",
     description: "",
     snsLinks: "",
     avatarUrl: "",
@@ -29,6 +27,9 @@ export default function OnboardingPage() {
     activityGoal: "",
   });
   const [acceptsRequests, setAcceptsRequests] = useState(false);
+  const [genres, setGenres] = useState<string[]>([]);
+  const [genreCreators, setGenreCreators] = useState<string[]>([]);
+  const [activityTimes, setActivityTimes] = useState<string[]>([]);
   const [youtubeTags, setYoutubeTags] = useState<string[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
   const [tagError, setTagError] = useState("");
@@ -40,21 +41,21 @@ export default function OnboardingPage() {
     setForm((prev) => {
       const next = { ...prev, [name]: value };
       if (name === "userType") {
-        next.genre = "";
-        next.genreCreator = "";
+        setGenres([]); setGenreCreators([]);
       }
       return next;
     });
   };
 
   const handleFetchTags = async () => {
-    if (!form.youtubeUrl) return;
+    if (!form.youtubeUrl || !user) return;
     setLoadingTags(true);
     setTagError("");
     try {
+      const token = await user.getIdToken();
       const res = await fetch("/api/youtube", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ url: form.youtubeUrl }),
       });
       const data = await res.json();
@@ -79,7 +80,11 @@ export default function OnboardingPage() {
         ...form,
         userType: form.userType as "vtuber" | "creator" | "vtuber_creator" | undefined,
         acceptsRequests: isCreatorType ? acceptsRequests : false,
+        genre: genres,
+        genreCreator: genreCreators,
+        activityTime: activityTimes,
         youtubeTags,
+        isPublic: true,
       });
       router.push("/personality-test");
     } catch (err: any) {
@@ -119,6 +124,9 @@ export default function OnboardingPage() {
 
   const isCreatorType = form.userType === "creator" || form.userType === "vtuber_creator";
   const isVtuberCreator = form.userType === "vtuber_creator";
+  const genreSuggestions =
+    form.userType === "vtuber" ? VTUBER_GENRES :
+    form.userType === "creator" ? CREATOR_GENRES : [];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950 py-12">
@@ -184,80 +192,49 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {form.userType === "vtuber" && (
+          {form.userType && !isVtuberCreator && (
             <div>
-              <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>
-              <select
-                name="genre"
-                value={form.genre}
-                onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-              >
-                <option value="">選択してください</option>
-                {VTUBER_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
-              </select>
-            </div>
-          )}
-
-          {form.userType === "creator" && (
-            <div>
-              <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>
-              <select
-                name="genre"
-                value={form.genre}
-                onChange={handleChange}
-                className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-              >
-                <option value="">選択してください</option>
-                {CREATOR_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
-              </select>
+              <label className="block text-gray-300 text-sm mb-1">活動ジャンル（複数可）</label>
+              <TagInput
+                tags={genres}
+                onChange={setGenres}
+                placeholder="ジャンルを入力してEnterで追加"
+                suggestions={genreSuggestions}
+              />
             </div>
           )}
 
           {isVtuberCreator && (
             <>
               <div>
-                <label className="block text-gray-300 text-sm mb-1">活動ジャンル[VTuber]</label>
-                <select
-                  name="genre"
-                  value={form.genre}
-                  onChange={handleChange}
-                  className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-                >
-                  <option value="">選択してください</option>
-                  {VTUBER_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
-                </select>
+                <label className="block text-gray-300 text-sm mb-1">活動ジャンル〔VTuber〕（複数可）</label>
+                <TagInput
+                  tags={genres}
+                  onChange={setGenres}
+                  placeholder="ジャンルを入力してEnterで追加"
+                  suggestions={VTUBER_GENRES}
+                />
               </div>
               <div>
-                <label className="block text-gray-300 text-sm mb-1">活動ジャンル[クリエイター]</label>
-                <select
-                  name="genreCreator"
-                  value={form.genreCreator}
-                  onChange={handleChange}
-                  className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-                >
-                  <option value="">選択してください</option>
-                  {CREATOR_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
-                </select>
+                <label className="block text-gray-300 text-sm mb-1">活動ジャンル〔クリエイター〕（複数可）</label>
+                <TagInput
+                  tags={genreCreators}
+                  onChange={setGenreCreators}
+                  placeholder="ジャンルを入力してEnterで追加"
+                  suggestions={CREATOR_GENRES}
+                />
               </div>
             </>
           )}
 
           <div>
-            <label className="block text-gray-300 text-sm mb-1">活動時間帯</label>
-            <select
-              name="activityTime"
-              value={form.activityTime}
-              onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-            >
-              <option value="">選択してください</option>
-              <option value="朝（6〜12時）">朝（6〜12時）</option>
-              <option value="昼（12〜18時）">昼（12〜18時）</option>
-              <option value="夜（18〜24時）">夜（18〜24時）</option>
-              <option value="深夜（0〜6時）">深夜（0〜6時）</option>
-              <option value="不定期">不定期</option>
-            </select>
+            <label className="block text-gray-300 text-sm mb-1">活動時間帯（複数可）</label>
+            <TagInput
+              tags={activityTimes}
+              onChange={setActivityTimes}
+              placeholder="活動時間帯を入力してEnterで追加"
+              suggestions={ACTIVITY_TIMES}
+            />
           </div>
 
           <div>
@@ -350,13 +327,13 @@ export default function OnboardingPage() {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm mb-1">SNSリンク</label>
+            <label className="block text-gray-300 text-sm mb-1">関連リンク</label>
             <input
               type="text"
               name="snsLinks"
               value={form.snsLinks}
               onChange={handleChange}
-              placeholder="Twitter・YouTubeなどのURL"
+              placeholder="X・ホームページなどのURL"
               className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
             />
           </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getAllUsers, getUserProfile, PublicUserProfile } from "../../lib/firestore";
+import { getAllUsers, getUserProfile, PublicUserProfile, toTagArray } from "../../lib/firestore";
 import { useAuth } from "../../lib/AuthContext";
 import PickupModal from "../../components/PickupModal";
 
@@ -66,9 +66,9 @@ export default function ExplorePage() {
     }
   }, [user, loading, myPersonalityType]);
 
-  // creator のみ acceptsRequests=true の場合のみ表示（vtuber / vtuber_creator は常に表示）
+  // isPublic=false のユーザーを除外、creator は acceptsRequests=true のみ
   const visibleUsers = users.filter(
-    (u) => u.userType !== "creator" || u.acceptsRequests === true
+    (u) => u.isPublic !== false && (u.userType !== "creator" || u.acceptsRequests === true)
   );
 
   // 相性の良いユーザー一覧
@@ -248,18 +248,20 @@ function UserGrid({
                 </span>
               )}
             </div>
-            {u.genre && (
-              <span className="text-xs text-purple-300 bg-purple-900/40 px-2 py-1 rounded-full w-fit">
-                {u.genre}
+            {toTagArray(u.genre).map((g) => (
+              <span key={g} className="text-xs text-purple-300 bg-purple-900/40 px-2 py-1 rounded-full w-fit">
+                {g}
               </span>
-            )}
-            {u.genreCreator && (
-              <span className="text-xs text-green-300 bg-green-900/40 px-2 py-1 rounded-full w-fit">
-                {u.genreCreator}
+            ))}
+            {toTagArray(u.genreCreator).map((g) => (
+              <span key={g} className="text-xs text-green-300 bg-green-900/40 px-2 py-1 rounded-full w-fit">
+                {g}
               </span>
-            )}
-            {u.activityTime && (
-              <p className="text-gray-400 text-sm">活動時間: {u.activityTime}</p>
+            ))}
+            {toTagArray(u.activityTime).length > 0 && (
+              <p className="text-gray-400 text-sm">
+                活動時間: {toTagArray(u.activityTime).join(" / ")}
+              </p>
             )}
             {u.description && (
               <p className="text-gray-300 text-sm line-clamp-3">{u.description}</p>

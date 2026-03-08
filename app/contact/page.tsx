@@ -57,7 +57,9 @@ export default function ContactPage() {
           <h1 className="text-2xl font-bold text-white mb-3">送信完了！</h1>
           <p className="text-gray-400 text-sm leading-relaxed">
             お問い合わせいただきありがとうございます。<br />
-            内容を確認の上、必要に応じてご連絡いたします。
+            メールアドレスを入力いただいた場合でも、フォーム送信後の確認メールは届きません。<br />
+            内容を確認の上、必要に応じて５日以内にご返信いたします。<br />
+            何卒宜しくお願い致します。
           </p>
         </div>
       </div>

@@ -7,19 +7,34 @@ export default function AboutPage() {
 
         {/* ロゴ + キャッチコピー */}
         <div className="text-center mb-14">
-          <h1 className="text-5xl font-extrabold text-white mb-4 tracking-tight">Vクリ</h1>
-          <p className="text-xl text-gray-300">
-            <p>「VTuberとVTuber」「VTuberとクリエイター」</p><p>が出会う、無料マッチングサービス</p>
+          <img
+            src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp"
+            alt="Vクリマッチング"
+            className="h-12 w-auto mx-auto mb-6"
+          />
+          <p className="text-xl text-gray-300 leading-relaxed">
+            「<span className="text-purple-400 font-semibold">VTuber</span>と<span className="text-purple-400 font-semibold">VTuber</span>」
+            <br className="sm:hidden" />
+            「<span className="text-purple-400 font-semibold">VTuber</span>と<span className="text-cyan-400 font-semibold">クリエイター</span>」<br />
+            が出会う、無料マッチングサービス
           </p>
+          <div className="mt-8">
+            <Link
+              href="/signup"
+              className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-3 rounded-xl transition-colors text-lg"
+            >
+              無料で始める
+            </Link>
+          </div>
         </div>
 
         {/* サービス説明 */}
         <div className="bg-gray-900 rounded-2xl p-8 mb-8">
-          <h2 className="text-xl font-bold text-white mb-4">Vクリとは</h2>
+          <h2 className="text-xl font-bold text-white mb-4">Vクリマッチングとは</h2>
           <p className="text-gray-300 leading-relaxed mb-4">
-            「Vクリ」は、活動中の<span className="text-purple-400 font-semibold">VTuber</span>と、
+            「Vクリマッチング」は、活動中の<span className="text-purple-400 font-semibold">VTuber</span>と、
             イラスト・動画編集・作曲などを手がける
-            <span className="text-green-400 font-semibold">クリエイター</span>が
+            <span className="text-cyan-400 font-semibold">クリエイター</span>が
             コラボ相手・依頼先を見つけるためのマッチングサービスです。
           </p>
           <p className="text-gray-300 leading-relaxed mb-4">
@@ -63,7 +78,7 @@ export default function AboutPage() {
             href="/signup"
             className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-3 rounded-xl transition-colors text-lg"
           >
-            無料ではじめる
+            無料で始める
           </Link>
           <p className="text-gray-500 text-sm mt-4">
             すでにアカウントをお持ちの方は

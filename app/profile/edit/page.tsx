@@ -2,19 +2,17 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../lib/AuthContext";
-import { getUserProfile, updateUserProfile } from "../../../lib/firestore";
+import { getUserProfile, updateUserProfile, toTagArray } from "../../../lib/firestore";
 import AvatarUpload from "../../../components/AvatarUpload";
+import TagInput from "../../../components/TagInput";
 
 const VTUBER_GENRES = ["ゲーム", "雑談", "歌", "料理", "学習", "その他"];
 const CREATOR_GENRES = ["イラスト", "アニメーション", "動画編集", "デザイン", "作曲", "3Dモデリング", "その他"];
-
+const ACTIVITY_TIMES = ["朝（6〜12時）", "昼（12〜18時）", "夜（18〜24時）", "深夜（0〜6時）", "不定期"];
 
 type FormValues = {
   name: string;
   userType: string;
-  genre: string;
-  genreCreator: string;
-  activityTime: string;
   description: string;
   snsLinks: string;
   avatarUrl: string;
@@ -27,9 +25,6 @@ type FormValues = {
 const EMPTY_FORM: FormValues = {
   name: "",
   userType: "",
-  genre: "",
-  genreCreator: "",
-  activityTime: "",
   description: "",
   snsLinks: "",
   avatarUrl: "",
@@ -49,6 +44,13 @@ export default function ProfileEditPage() {
   const [acceptsRequests, setAcceptsRequests] = useState(false);
   const savedAcceptsRequestsRef = useRef(false);
 
+  const [genres, setGenres] = useState<string[]>([]);
+  const savedGenresRef = useRef<string[]>([]);
+  const [genreCreators, setGenreCreators] = useState<string[]>([]);
+  const savedGenreCreatorsRef = useRef<string[]>([]);
+  const [activityTimes, setActivityTimes] = useState<string[]>([]);
+  const savedActivityTimesRef = useRef<string[]>([]);
+
   const [youtubeTags, setYoutubeTags] = useState<string[]>([]);
   const savedYoutubeTagsRef = useRef<string[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
@@ -66,9 +68,6 @@ export default function ProfileEditPage() {
           const values: FormValues = {
             name: profile.name ?? "",
             userType: profile.userType ?? "",
-            genre: profile.genre ?? "",
-            genreCreator: profile.genreCreator ?? "",
-            activityTime: profile.activityTime ?? "",
             description: profile.description ?? "",
             snsLinks: profile.snsLinks ?? "",
             avatarUrl: profile.avatarUrl ?? "",
@@ -81,6 +80,12 @@ export default function ProfileEditPage() {
           savedRef.current = values;
           setAcceptsRequests(profile.acceptsRequests ?? false);
           savedAcceptsRequestsRef.current = profile.acceptsRequests ?? false;
+          const g = toTagArray(profile.genre);
+          const gc = toTagArray(profile.genreCreator);
+          const at = toTagArray(profile.activityTime);
+          setGenres(g); savedGenresRef.current = g;
+          setGenreCreators(gc); savedGenreCreatorsRef.current = gc;
+          setActivityTimes(at); savedActivityTimesRef.current = at;
           setYoutubeTags(profile.youtubeTags ?? []);
           savedYoutubeTagsRef.current = profile.youtubeTags ?? [];
         }
@@ -95,21 +100,21 @@ export default function ProfileEditPage() {
     setForm((prev) => {
       const next = { ...prev, [name]: value };
       if (name === "userType") {
-        next.genre = "";
-        next.genreCreator = "";
+        setGenres([]); setGenreCreators([]);
       }
       return next;
     });
   };
 
   const handleFetchTags = async () => {
-    if (!form.youtubeUrl) return;
+    if (!form.youtubeUrl || !user) return;
     setLoadingTags(true);
     setTagError("");
     try {
+      const token = await user.getIdToken();
       const res = await fetch("/api/youtube", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ url: form.youtubeUrl }),
       });
       const data = await res.json();
@@ -147,15 +152,18 @@ export default function ProfileEditPage() {
       if (!isCreatorType && wasCreatorType) {
         updates.acceptsRequests = false;
       }
-      // youtubeTags が変わっていれば更新
-      if (JSON.stringify(youtubeTags) !== JSON.stringify(savedYoutubeTagsRef.current)) {
-        updates.youtubeTags = youtubeTags;
-      }
+      if (JSON.stringify(genres) !== JSON.stringify(savedGenresRef.current)) updates.genre = genres;
+      if (JSON.stringify(genreCreators) !== JSON.stringify(savedGenreCreatorsRef.current)) updates.genreCreator = genreCreators;
+      if (JSON.stringify(activityTimes) !== JSON.stringify(savedActivityTimesRef.current)) updates.activityTime = activityTimes;
+      if (JSON.stringify(youtubeTags) !== JSON.stringify(savedYoutubeTagsRef.current)) updates.youtubeTags = youtubeTags;
 
       if (Object.keys(updates).length > 0) {
         await updateUserProfile(user.uid, updates);
         savedRef.current = { ...form };
         savedAcceptsRequestsRef.current = acceptsRequests;
+        savedGenresRef.current = genres;
+        savedGenreCreatorsRef.current = genreCreators;
+        savedActivityTimesRef.current = activityTimes;
         savedYoutubeTagsRef.current = youtubeTags;
       }
 
@@ -174,6 +182,11 @@ export default function ProfileEditPage() {
       </div>
     );
   }
+
+  const genreSuggestions =
+    form.userType === "vtuber" ? VTUBER_GENRES :
+    form.userType === "creator" ? CREATOR_GENRES :
+    form.userType === "vtuber_creator" ? [...VTUBER_GENRES, ...CREATOR_GENRES] : [];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950 py-12">
@@ -238,60 +251,49 @@ export default function ProfileEditPage() {
             </div>
           )}
 
-          {form.userType === "vtuber" && (
+          {form.userType && form.userType !== "vtuber_creator" && (
             <div>
-              <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>
-              <select name="genre" value={form.genre} onChange={handleChange} className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
-                <option value="">選択してください</option>
-                {VTUBER_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
-              </select>
-            </div>
-          )}
-
-          {form.userType === "creator" && (
-            <div>
-              <label className="block text-gray-300 text-sm mb-1">活動ジャンル</label>
-              <select name="genre" value={form.genre} onChange={handleChange} className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
-                <option value="">選択してください</option>
-                {CREATOR_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
-              </select>
+              <label className="block text-gray-300 text-sm mb-1">活動ジャンル（複数可）</label>
+              <TagInput
+                tags={genres}
+                onChange={setGenres}
+                placeholder="ジャンルを入力してEnterで追加"
+                suggestions={genreSuggestions}
+              />
             </div>
           )}
 
           {form.userType === "vtuber_creator" && (
             <>
               <div>
-                <label className="block text-gray-300 text-sm mb-1">活動ジャンル[VTuber]</label>
-                <select name="genre" value={form.genre} onChange={handleChange} className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
-                  <option value="">選択してください</option>
-                  {VTUBER_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
-                </select>
+                <label className="block text-gray-300 text-sm mb-1">活動ジャンル〔VTuber〕（複数可）</label>
+                <TagInput
+                  tags={genres}
+                  onChange={setGenres}
+                  placeholder="ジャンルを入力してEnterで追加"
+                  suggestions={VTUBER_GENRES}
+                />
               </div>
               <div>
-                <label className="block text-gray-300 text-sm mb-1">活動ジャンル[クリエイター]</label>
-                <select name="genreCreator" value={form.genreCreator} onChange={handleChange} className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500">
-                  <option value="">選択してください</option>
-                  {CREATOR_GENRES.map((g) => (<option key={g} value={g}>{g}</option>))}
-                </select>
+                <label className="block text-gray-300 text-sm mb-1">活動ジャンル〔クリエイター〕（複数可）</label>
+                <TagInput
+                  tags={genreCreators}
+                  onChange={setGenreCreators}
+                  placeholder="ジャンルを入力してEnterで追加"
+                  suggestions={CREATOR_GENRES}
+                />
               </div>
             </>
           )}
 
           <div>
-            <label className="block text-gray-300 text-sm mb-1">活動時間帯</label>
-            <select
-              name="activityTime"
-              value={form.activityTime}
-              onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-            >
-              <option value="">選択してください</option>
-              <option value="朝（6〜12時）">朝（6〜12時）</option>
-              <option value="昼（12〜18時）">昼（12〜18時）</option>
-              <option value="夜（18〜24時）">夜（18〜24時）</option>
-              <option value="深夜（0〜6時）">深夜（0〜6時）</option>
-              <option value="不定期">不定期</option>
-            </select>
+            <label className="block text-gray-300 text-sm mb-1">活動時間帯（複数可）</label>
+            <TagInput
+              tags={activityTimes}
+              onChange={setActivityTimes}
+              placeholder="活動時間帯を入力してEnterで追加"
+              suggestions={ACTIVITY_TIMES}
+            />
           </div>
 
           <div>
@@ -384,13 +386,13 @@ export default function ProfileEditPage() {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm mb-1">SNSリンク</label>
+            <label className="block text-gray-300 text-sm mb-1">関連リンク</label>
             <input
               type="text"
               name="snsLinks"
               value={form.snsLinks}
               onChange={handleChange}
-              placeholder="Twitter・YouTubeなどのURL"
+              placeholder="X・ホームページなどのURL"
               className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
             />
           </div>

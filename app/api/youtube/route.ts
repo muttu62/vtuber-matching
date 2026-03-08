@@ -79,9 +79,11 @@ async function resolveChannelId(
 }
 
 export async function POST(req: NextRequest) {
-  console.log("[youtube] YOUTUBE_API_KEY exists:", !!process.env.YOUTUBE_API_KEY);
-  console.log("[youtube] YOUTUBE_API_KEY length:", process.env.YOUTUBE_API_KEY?.length ?? 0);
-  console.log("[youtube] NODE_ENV:", process.env.NODE_ENV);
+  // 認証チェック（Bearerトークンが必要）
+  const authHeader = req.headers.get("authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { url, type = "tags" } = await req.json();
   if (!url) return NextResponse.json({ error: "URLを入力してください" }, { status: 400 });

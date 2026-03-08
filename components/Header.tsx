@@ -67,7 +67,7 @@ export default function Header() {
           {/* 探す（公開） */}
           <Link
             href="/explore"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
               pathname === "/explore"
                 ? "bg-purple-600 text-white"
                 : "text-gray-400 hover:text-white hover:bg-gray-800"
@@ -82,7 +82,7 @@ export default function Header() {
               <Link
                 key={href}
                 href={href}
-                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                   pathname === href
                     ? "bg-purple-600 text-white"
                     : "text-gray-400 hover:text-white hover:bg-gray-800"
@@ -99,7 +99,7 @@ export default function Header() {
               <button
                 key={href}
                 onClick={() => setShowPopup((prev) => !prev)}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap"
               >
                 {label}
               </button>

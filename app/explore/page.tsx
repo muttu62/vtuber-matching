@@ -36,6 +36,7 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterTab>("all");
   const [showPickup, setShowPickup] = useState(false);
+  const [showPersonalityPromo, setShowPersonalityPromo] = useState(false);
 
   useEffect(() => {
     getAllUsers()
@@ -55,9 +56,9 @@ export default function ExplorePage() {
     });
   }, [user]);
 
-  // 1日1回ポップアップ表示（ログイン済み・全データ読込後）
+  // 1日1回ポップアップ表示（ログイン済み・診断済み・全データ読込後）
   useEffect(() => {
-    if (!user || loading || myPersonalityType === undefined) return;
+    if (!user || loading || myPersonalityType === undefined || myPersonalityType === null) return;
     const today = new Date().toISOString().slice(0, 10);
     const shown = localStorage.getItem("pickup_shown_date");
     if (shown !== today) {
@@ -65,6 +66,18 @@ export default function ExplorePage() {
       setShowPickup(true);
     }
   }, [user, loading, myPersonalityType]);
+
+  // 性格診断をしていないユーザーへのプロモポップアップ
+  useEffect(() => {
+    if (myPersonalityType === undefined) return; // まだ読み込み中
+    const today = new Date().toISOString().slice(0, 10);
+    const dismissed = localStorage.getItem("personality_promo_dismissed");
+    if (dismissed === today) return;
+    // ログイン済みで未診断、またはログインしていない場合に表示
+    if (!myPersonalityType) {
+      setShowPersonalityPromo(true);
+    }
+  }, [myPersonalityType]);
 
   // isPublic=false のユーザーを除外、creator は acceptsRequests=true のみ
   const visibleUsers = users.filter(
@@ -112,6 +125,39 @@ export default function ExplorePage() {
           myPersonalityType={myPersonalityType ?? null}
           onClose={() => setShowPickup(false)}
         />
+      )}
+
+      {/* 未診断ユーザー向け性格診断プロモポップアップ */}
+      {showPersonalityPromo && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
+          <div className="bg-gray-900 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl border border-purple-700">
+            <div className="text-5xl mb-4">🎭</div>
+            <h2 className="text-xl font-bold text-white mb-3">
+              相性の良い仲間が見つかる！
+            </h2>
+            <p className="text-gray-300 text-sm leading-relaxed mb-6">
+              性格診断を受けると、あなたにぴったりの
+              VTuber・クリエイターが自動で提案されます。
+              一緒にVTuber活動を楽しめる仲間を見つけよう！
+            </p>
+            <a
+              href="/personality-test"
+              className="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors mb-3"
+            >
+              🎭 性格診断を受ける
+            </a>
+            <button
+              onClick={() => {
+                const today = new Date().toISOString().slice(0, 10);
+                localStorage.setItem("personality_promo_dismissed", today);
+                setShowPersonalityPromo(false);
+              }}
+              className="text-gray-500 hover:text-gray-300 text-sm transition-colors"
+            >
+              今日はスキップ
+            </button>
+          </div>
+        </div>
       )}
 
       <h1 className="text-2xl font-bold text-white mb-6">ユーザーを探す</h1>

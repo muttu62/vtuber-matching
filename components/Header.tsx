@@ -52,6 +52,11 @@ export default function Header() {
     return unsubscribe;
   }, [user]);
 
+  const publicLinks = [
+    { href: "/diagnosis", label: "相性診断" },
+    { href: "/share", label: "みんなと共有" },
+  ];
+
   const authLinks = [
     { href: "/matches", label: "申請", badge: pendingCount },
     { href: "/mypage", label: "マイページ", badge: 0 },
@@ -75,6 +80,21 @@ export default function Header() {
           >
             探す
           </Link>
+
+          {/* 相性診断・みんなと共有（公開） */}
+          {publicLinks.map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-center md:text-left ${
+                pathname === href
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800"
+              }`}
+            >
+              {label}
+            </Link>
+          ))}
 
           {/* 申請・マイページ（要ログイン） */}
           {authLinks.map(({ href, label, badge }) =>

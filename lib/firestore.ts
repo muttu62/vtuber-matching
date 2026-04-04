@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, collection, getDocs, addDoc, query, where, updateDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, addDoc, query, where, updateDoc, orderBy, limit, deleteDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 export type UserProfile = {
@@ -15,6 +15,8 @@ export type UserProfile = {
   genreCreator?: string | string[];
   acceptsRequests?: boolean;
   privateContact?: string;
+  contactPlatform?: string;
+  contactValue?: string;
   youtubeUrl?: string;
   youtubeTags?: string[];
   collaboWant?: string;
@@ -27,11 +29,11 @@ export type UserProfile = {
   isPublic?: boolean;
 };
 
-// 他ユーザーに公開するフィールドのみ（email・privateContact を除外）
-export type PublicUserProfile = Omit<UserProfile, "email" | "privateContact">;
+// 他ユーザーに公開するフィールドのみ（email・privateContact・contactPlatform・contactValue を除外）
+export type PublicUserProfile = Omit<UserProfile, "email" | "privateContact" | "contactPlatform" | "contactValue">;
 
 function toPublic(u: UserProfile): PublicUserProfile {
-  const { email: _e, privateContact: _p, ...rest } = u;
+  const { email: _e, privateContact: _p, contactPlatform: _cp, contactValue: _cv, ...rest } = u;
   return rest;
 }
 
@@ -131,4 +133,64 @@ export async function updateMatchStatus(matchId: string, status: Match["status"]
 export function toTagArray(value: string | string[] | undefined): string[] {
   if (!value) return [];
   return Array.isArray(value) ? value : value ? [value] : [];
+}
+
+// ---- みんなと共有（共有ボード）----
+
+export type SharePost = {
+  id: string;
+  authorUid: string;
+  authorName: string;
+  authorAvatarUrl?: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  commentCount?: number;
+};
+
+export type ShareComment = {
+  id: string;
+  postId: string;
+  authorUid: string;
+  authorName: string;
+  authorAvatarUrl?: string;
+  body: string;
+  createdAt: string;
+};
+
+export async function getSharePosts(maxCount = 50): Promise<SharePost[]> {
+  const q = query(collection(db, "share_posts"), orderBy("createdAt", "desc"), limit(maxCount));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SharePost));
+}
+
+export async function getSharePost(postId: string): Promise<SharePost | null> {
+  const snap = await getDoc(doc(db, "share_posts", postId));
+  return snap.exists() ? ({ id: snap.id, ...snap.data() } as SharePost) : null;
+}
+
+export async function createSharePost(data: Omit<SharePost, "id">): Promise<string> {
+  const ref = await addDoc(collection(db, "share_posts"), data);
+  return ref.id;
+}
+
+export async function deleteSharePost(postId: string): Promise<void> {
+  await deleteDoc(doc(db, "share_posts", postId));
+}
+
+export async function getShareComments(postId: string): Promise<ShareComment[]> {
+  const q = query(collection(db, "share_comments"), where("postId", "==", postId), orderBy("createdAt", "asc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ShareComment));
+}
+
+export async function createShareComment(data: Omit<ShareComment, "id">): Promise<void> {
+  await addDoc(collection(db, "share_comments"), data);
+  // commentCount をインクリメント
+  const postRef = doc(db, "share_posts", data.postId);
+  const postSnap = await getDoc(postRef);
+  if (postSnap.exists()) {
+    const current = (postSnap.data().commentCount ?? 0) as number;
+    await updateDoc(postRef, { commentCount: current + 1 });
+  }
 }

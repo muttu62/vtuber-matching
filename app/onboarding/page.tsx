@@ -21,6 +21,8 @@ export default function OnboardingPage() {
     snsLinks: "",
     avatarUrl: "",
     privateContact: "",
+    contactPlatform: "",
+    contactValue: "",
     youtubeUrl: "",
     collaboWant: "",
     collaboStyle: "",
@@ -78,6 +80,10 @@ export default function OnboardingPage() {
       const isCreatorType = form.userType === "creator" || form.userType === "vtuber_creator";
       await updateUserProfile(user.uid, {
         ...form,
+        // 後方互換: contactPlatform + contactValue を連結して privateContact にも保存
+        privateContact: form.contactPlatform
+          ? `${form.contactPlatform}: ${form.contactValue}`
+          : form.contactValue,
         userType: form.userType as "vtuber" | "creator" | "vtuber_creator" | undefined,
         acceptsRequests: isCreatorType ? acceptsRequests : false,
         genre: genres,
@@ -342,17 +348,28 @@ export default function OnboardingPage() {
             <label className="block text-gray-300 text-sm mb-1">
               非公開の連絡先 <span className="text-red-400">*</span>
             </label>
-            <input
-              type="text"
-              name="privateContact"
-              value={form.privateContact}
-              onChange={handleChange}
-              placeholder="例: Discord: username#1234"
-              required
-              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-            />
+            <div className="space-y-2">
+              <input
+                type="text"
+                name="contactPlatform"
+                value={form.contactPlatform}
+                onChange={handleChange}
+                placeholder="連絡先プラットフォーム（例：Discord / X / メール）"
+                required
+                className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+              />
+              <input
+                type="text"
+                name="contactValue"
+                value={form.contactValue}
+                onChange={handleChange}
+                placeholder="連絡先（例：username#1234 / @handle / example@mail.com）"
+                required
+                className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+              />
+            </div>
             <p className="text-gray-500 text-xs mt-2 leading-relaxed">
-              Xのユーザー名を記載してDMのやりとりなどでもOKですが、Xでの設定によりDMが送れない場合もありますので、多くのユーザーが使用しているDiscordのIDがおすすめです。マッチングが成立した相手にのみ公開されます。
+              多くのユーザーが使用しているDiscordのIDがおすすめです。マッチングが成立した相手にのみ公開されます。
             </p>
           </div>
 

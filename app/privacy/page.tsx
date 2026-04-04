@@ -10,7 +10,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-bold text-white mb-3">1. 基本方針</h2>
             <p>
-              Vクリ（以下「当サービス」）は、ユーザーの個人情報の保護を重要な責務と認識し、
+              Vクリマッチング（以下「当サービス」）は、ユーザーの個人情報の保護を重要な責務と認識し、
               個人情報の保護に関する法律（個人情報保護法）および関連法令を遵守します。
               本ポリシーは当サービスが収集・利用する情報の取り扱いについて説明するものです。
             </p>
@@ -58,27 +58,10 @@ export default function PrivacyPage() {
               <li>法令に基づき開示が必要な場合</li>
               <li>人の生命・身体・財産の保護のために必要な場合</li>
             </ul>
-            <p className="mt-3 text-sm text-gray-500">
-              ※ サービス運営に必要な範囲で、以下の業務委託先に情報を提供する場合があります（いずれも当ポリシーと同等の保護水準を要求しています）。
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-gray-500 text-sm mt-2">
-              <li>Firebase（Google LLC） — 認証・データベース</li>
-              <li>Cloudinary, Inc. — 画像ストレージ</li>
-              <li>Resend, Inc. — メール送信</li>
-            </ul>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">5. 情報の保存と管理</h2>
-            <p>
-              収集した個人情報は、Firebase（Googleのクラウドサービス）上に保存されます。
-              パスワードはFirebase Authenticationによって安全に管理されており、当サービスが直接参照することはありません。
-              アバター画像はCloudinaryのサーバーに保存されます。
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-bold text-white mb-3">6. ユーザーの権利</h2>
+            <h2 className="text-lg font-bold text-white mb-3">5. ユーザーの権利</h2>
             <p className="mb-2">ユーザーは以下の権利を有します。</p>
             <ul className="list-disc list-inside space-y-1 text-gray-400">
               <li>自身のプロフィール情報の閲覧・修正（プロフィール編集ページから）</li>
@@ -88,7 +71,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">7. Cookieの使用</h2>
+            <h2 className="text-lg font-bold text-white mb-3">6. Cookieの使用</h2>
             <p>
               当サービスはセッション管理のためにCookieを使用します。
               ブラウザの設定によりCookieを無効にすることができますが、その場合サービスの一部機能が利用できなくなる場合があります。
@@ -96,15 +79,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">8. 未成年者のプライバシー</h2>
-            <p>
-              当サービスは13歳未満の方を対象としていません。
-              13歳未満の方の個人情報を意図的に収集することはなく、発覚した場合は速やかに削除します。
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-lg font-bold text-white mb-3">9. ポリシーの変更</h2>
+            <h2 className="text-lg font-bold text-white mb-3">7. ポリシーの変更</h2>
             <p>
               本ポリシーは必要に応じて変更されることがあります。
               重要な変更がある場合はサービス上でお知らせします。
@@ -113,7 +88,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">10. お問い合わせ</h2>
+            <h2 className="text-lg font-bold text-white mb-3">8. お問い合わせ</h2>
             <p>
               個人情報の取り扱いに関するお問い合わせは、サービス内のお問い合わせフォームよりご連絡ください。
             </p>

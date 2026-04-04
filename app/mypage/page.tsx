@@ -39,6 +39,8 @@ export default function MyPage() {
   // 非公開の連絡先変更
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactInput, setContactInput] = useState("");
+  const [contactPlatformInput, setContactPlatformInput] = useState("");
+  const [contactValueInput, setContactValueInput] = useState("");
   const [savingContact, setSavingContact] = useState(false);
 
   // アカウント公開設定
@@ -136,8 +138,18 @@ export default function MyPage() {
     if (!user) return;
     setSavingContact(true);
     try {
-      await updateUserProfile(user.uid, { privateContact: contactInput.trim() });
-      setProfile((prev) => prev ? { ...prev, privateContact: contactInput.trim() } : prev);
+      await updateUserProfile(user.uid, {
+        contactPlatform: contactPlatformInput.trim(),
+        contactValue: contactValueInput.trim(),
+        // 後方互換のため旧フィールドも更新
+        privateContact: contactPlatformInput.trim()
+          ? `${contactPlatformInput.trim()}: ${contactValueInput.trim()}`
+          : contactValueInput.trim(),
+      });
+      setProfile((prev) => prev
+        ? { ...prev, contactPlatform: contactPlatformInput.trim(), contactValue: contactValueInput.trim() }
+        : prev
+      );
       setShowContactForm(false);
     } finally {
       setSavingContact(false);
@@ -253,9 +265,20 @@ export default function MyPage() {
           {/* 非公開の連絡先（表示のみ） */}
           <div className="border-t border-gray-800 pt-4">
             <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">非公開の連絡先</h2>
-            <p className={`text-sm ${profile?.privateContact ? "text-white" : "text-gray-500"}`}>
-              {profile?.privateContact || "未設定"}
-            </p>
+            {(profile?.contactPlatform || profile?.contactValue) ? (
+              <div className="flex items-center gap-2 text-sm">
+                {profile?.contactPlatform && (
+                  <span className="bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full text-xs">
+                    {profile.contactPlatform}
+                  </span>
+                )}
+                <span className="text-white">{profile?.contactValue || ""}</span>
+              </div>
+            ) : (
+              <p className={`text-sm ${profile?.privateContact ? "text-white" : "text-gray-500"}`}>
+                {profile?.privateContact || "未設定"}
+              </p>
+            )}
           </div>
         </div>
 
@@ -353,7 +376,8 @@ export default function MyPage() {
             <h2 className="text-white font-bold">非公開の連絡先変更</h2>
             <button
               onClick={() => {
-                setContactInput(profile?.privateContact ?? "");
+                setContactPlatformInput(profile?.contactPlatform ?? "");
+                setContactValueInput(profile?.contactValue ?? (profile?.privateContact ?? ""));
                 setShowContactForm((v) => !v);
               }}
               className="text-purple-400 hover:text-purple-300 text-sm"
@@ -364,13 +388,26 @@ export default function MyPage() {
           <p className="text-gray-500 text-xs">マッチング成立した相手にのみ公開されます</p>
           {showContactForm && (
             <div className="mt-3 space-y-2">
-              <input
-                type="text"
-                value={contactInput}
-                onChange={(e) => setContactInput(e.target.value)}
-                placeholder="例: Discord: username / @X_username"
-                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
-              />
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">連絡先プラットフォーム</label>
+                <input
+                  type="text"
+                  value={contactPlatformInput}
+                  onChange={(e) => setContactPlatformInput(e.target.value)}
+                  placeholder="例: Discord / X / メール"
+                  className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">連絡先（ID・アドレス）</label>
+                <input
+                  type="text"
+                  value={contactValueInput}
+                  onChange={(e) => setContactValueInput(e.target.value)}
+                  placeholder="例: username#1234 / @handle / example@mail.com"
+                  className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+                />
+              </div>
               <button
                 onClick={handleSaveContact}
                 disabled={savingContact}
@@ -424,16 +461,28 @@ export default function MyPage() {
           >
             🎭 {profile?.personalityType ? "性格診断をやり直す" : "性格診断で相性のいい人を探す"}
           </button>
-          {user && (
-            <a
-              href={`https://twitter.com/intent/tweet?text=%E3%80%90%E3%82%B3%E3%83%A9%E3%83%9C%E5%8B%9F%E9%9B%86%E4%B8%AD%E3%80%91V%E3%82%AF%E3%83%AA%E3%81%A7%E3%82%B3%E3%83%A9%E3%83%9C%E7%9B%B8%E6%89%8B%E3%82%92%E6%8E%A2%E3%81%97%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%EF%BC%81%E6%B0%97%E3%81%AB%E3%81%AA%E3%82%8B%E6%96%B9%E3%81%AF%E3%81%93%E3%81%A1%E3%82%89%E3%81%8B%E3%82%89%E3%81%A9%E3%81%86%E3%81%9E%F0%9F%91%87%0Ahttps%3A%2F%2Fv-kuri.com%2Fprofile%2F${user.uid}%0A%23Vtuber%E5%8B%9F%E9%9B%86%20%23%E3%82%B3%E3%83%A9%E3%83%9C%E5%8B%9F%E9%9B%86%20%23%E5%80%8B%E4%BA%BAvtuber`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg transition-colors text-center"
-            >
-              𝕏で募集ツイートする
-            </a>
-          )}
+          {user && (() => {
+            const today = new Date().toISOString().slice(0, 10);
+            const sharedToday = typeof window !== "undefined"
+              && localStorage.getItem("x_shared_date") === today;
+            return (
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`【コラボ募集中】Vクリでコラボ相手を探しています！気になる方はこちらからどうぞ👇\nhttps://v-kuri.com/profile/${user.uid}\n#Vtuber募集 #コラボ募集 #個人vtuber`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => localStorage.setItem("x_shared_date", today)}
+                className={`block w-full font-bold py-3 rounded-lg transition-colors text-center ${
+                  sharedToday
+                    ? "bg-sky-700 text-sky-200 cursor-default"
+                    : "bg-sky-500 hover:bg-sky-600 text-white"
+                }`}
+              >
+                {sharedToday
+                  ? "✅ 本日シェア済み（申請可能枠+5）"
+                  : "𝕏でマイページを共有して申請可能枠を増やす（+5）"}
+              </a>
+            );
+          })()}
           <button
             onClick={handleLogout}
             className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-colors"

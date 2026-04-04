@@ -40,6 +40,7 @@ function ShareBoardContent() {
   const [editTag, setEditTag] = useState<ShareTag | "">("");
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState("");
+  const [showMyPosts, setShowMyPosts] = useState(false);
 
   useEffect(() => {
     getSharePosts().then(setPosts).finally(() => setLoading(false));
@@ -111,7 +112,10 @@ function ShareBoardContent() {
     }
   };
 
-  const displayed = filterTag === "all" ? posts : posts.filter((p) => p.tag === filterTag);
+  const myPosts = user ? posts.filter((p) => p.authorUid === user.uid) : [];
+  const displayed = showMyPosts
+    ? myPosts
+    : filterTag === "all" ? posts : posts.filter((p) => p.tag === filterTag);
 
   return (
     <div className="min-h-screen bg-gray-950 py-12 px-4">
@@ -124,12 +128,24 @@ function ShareBoardContent() {
             <p className="text-gray-400 text-sm mt-1">ナレッジを共有するボードです</p>
           </div>
           {user && (
-            <button
-              onClick={() => { setShowForm((v) => !v); setSubmitError(""); }}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition-colors shrink-0"
-            >
-              {showForm ? "閉じる" : "記事を書く"}
-            </button>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => { setShowMyPosts(false); setShowForm((v) => !v); setSubmitError(""); }}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-2 rounded-lg text-sm transition-colors"
+              >
+                {showForm ? "閉じる" : "記事を書く"}
+              </button>
+              <button
+                onClick={() => { setShowForm(false); setShowMyPosts((v) => !v); }}
+                className={`font-bold px-3 py-2 rounded-lg text-sm transition-colors border ${
+                  showMyPosts
+                    ? "bg-gray-700 border-gray-600 text-white"
+                    : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white"
+                }`}
+              >
+                {showMyPosts ? "閉じる" : "過去投稿を編集"}
+              </button>
+            </div>
           )}
         </div>
 
@@ -204,8 +220,8 @@ function ShareBoardContent() {
           </div>
         )}
 
-        {/* タグフィルター */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        {/* タグフィルター（記事を書く・過去投稿を編集中は非表示） */}
+        {!showForm && !showMyPosts && <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => setFilterTag("all")}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors border ${
@@ -229,7 +245,15 @@ function ShareBoardContent() {
               {t}
             </button>
           ))}
-        </div>
+        </div>}
+
+        {/* 過去投稿を編集モード：見出し */}
+        {showMyPosts && (
+          <div className="mb-4">
+            <p className="text-white font-bold text-sm">自分の投稿（{myPosts.length}件）</p>
+            {myPosts.length === 0 && <p className="text-gray-500 text-sm mt-2">まだ投稿がありません</p>}
+          </div>
+        )}
 
         {/* 記事一覧 */}
         {loading ? (
@@ -315,42 +339,44 @@ function ShareBoardContent() {
                     </span>
                     <h2 className="text-white font-bold text-lg mb-2 line-clamp-2">{post.title}</h2>
                     <p className="text-gray-400 text-sm line-clamp-3 leading-relaxed mb-4">{post.body}</p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <div className="flex items-center gap-2">
-                        {post.authorAvatarUrl ? (
-                          <img src={post.authorAvatarUrl} alt={post.authorName} className="w-5 h-5 rounded-full object-cover" />
-                        ) : (
-                          <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-xs">?</div>
-                        )}
-                        <span>{post.authorName}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        {(post.commentCount ?? 0) > 0 && <span>💬 {post.commentCount}</span>}
-                        <span>
-                          {post.updatedAt
-                            ? `最終更新：${formatDate(post.updatedAt)}`
-                            : formatDate(post.createdAt)}
-                        </span>
-                        {/* 投稿者本人のみ編集・削除 */}
-                        {user?.uid === post.authorUid && (
-                          <span className="flex gap-2" data-action>
-                            <button
-                              data-action
-                              onClick={() => startEdit(post)}
-                              className="text-gray-400 hover:text-white transition-colors"
-                            >
-                              編集
-                            </button>
-                            <button
-                              data-action
-                              onClick={() => handleDelete(post.id)}
-                              className="text-red-500 hover:text-red-400 transition-colors"
-                            >
-                              削除
-                            </button>
+                    <div className="text-xs text-gray-500">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {post.authorAvatarUrl ? (
+                            <img src={post.authorAvatarUrl} alt={post.authorName} className="w-5 h-5 rounded-full object-cover" />
+                          ) : (
+                            <div className="w-5 h-5 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-xs">?</div>
+                          )}
+                          <span>{post.authorName}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {(post.commentCount ?? 0) > 0 && <span>💬 {post.commentCount}</span>}
+                          <span>
+                            {post.updatedAt
+                              ? `最終更新：${formatDate(post.updatedAt)}`
+                              : formatDate(post.createdAt)}
                           </span>
-                        )}
+                        </div>
                       </div>
+                      {/* 投稿者本人のみ編集・削除（独立した行でモバイルでも確実に表示） */}
+                      {user?.uid === post.authorUid && (
+                        <div className="flex justify-end gap-3 mt-2" data-action>
+                          <button
+                            data-action
+                            onClick={() => startEdit(post)}
+                            className="text-gray-400 hover:text-white transition-colors"
+                          >
+                            編集
+                          </button>
+                          <button
+                            data-action
+                            onClick={() => handleDelete(post.id)}
+                            className="text-red-500 hover:text-red-400 transition-colors"
+                          >
+                            削除
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </Link>
                 )}

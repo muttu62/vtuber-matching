@@ -66,7 +66,7 @@ export default function Header() {
     <header className="bg-gray-900 border-b border-gray-800">
       <div className="max-w-5xl mx-auto px-4">
         {/* モバイル: 2行レイアウト / デスクトップ: 1行 */}
-        <div className="flex items-center justify-between h-12 md:hidden">
+        <div className="flex items-center justify-between h-12 md:hidden border-b border-white/10">
           {/* 1行目: ロゴ（左） */}
           <Link href="/about" className="text-white font-bold text-lg tracking-tight">
             <img src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp" alt="Vクリ" className="h-7 w-auto" />

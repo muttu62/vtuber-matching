@@ -99,7 +99,7 @@ function SharePostContent() {
         <Link href="/share" className="text-gray-400 hover:text-white text-sm mb-6 inline-block">← 一覧に戻る</Link>
 
         {/* 記事本文 */}
-        <article className="bg-gray-900 rounded-2xl p-8 mb-8">
+        <article className="bg-gray-900 rounded-2xl p-4 mb-8">
           {post.tag && (
             <span className={`inline-block text-xs px-2.5 py-1 rounded-full border mb-4 ${TAG_COLORS[post.tag as ShareTag] ?? "bg-gray-700 text-gray-300 border-gray-600"}`}>
               {post.tag}

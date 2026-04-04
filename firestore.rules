@@ -31,14 +31,18 @@ service cloud.firestore {
     // - 読み取り: 全員可（未認証でも閲覧できる）
     // - 作成: 認証済みかつ authorUid が自分の UID
     // - 削除: 投稿者本人のみ
+    // - 更新: 投稿者本人（title/body/tag/updatedAt）またはコメントカウント更新
     match /share_posts/{postId} {
       allow read: if true;
       allow create: if request.auth != null &&
         request.auth.uid == request.resource.data.authorUid;
       allow delete: if request.auth != null &&
         request.auth.uid == resource.data.authorUid;
-      allow update: if request.auth != null &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount']);
+      allow update: if request.auth != null && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount']) ||
+        (request.auth.uid == resource.data.authorUid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'body', 'tag', 'updatedAt']))
+      );
     }
 
     // share_comments コレクション

@@ -4,9 +4,17 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../../lib/AuthContext";
 import {
-  SharePost, ShareComment,
+  SharePost, ShareComment, ShareTag, SHARE_TAGS,
   getSharePost, getShareComments, createShareComment, deleteSharePost, getUserProfile,
 } from "../../../lib/firestore";
+
+const TAG_COLORS: Record<ShareTag, string> = {
+  "初心者向け":      "bg-blue-900/40 text-blue-300 border-blue-700",
+  "ツール・機材":    "bg-green-900/40 text-green-300 border-green-700",
+  "クリエイティブ":  "bg-purple-900/40 text-purple-300 border-purple-700",
+  "伸ばし方・考え方":"bg-yellow-900/40 text-yellow-300 border-yellow-700",
+  "最新情報":        "bg-red-900/40 text-red-300 border-red-700",
+};
 
 function SharePostContent() {
   const params = useParams();
@@ -92,6 +100,11 @@ function SharePostContent() {
 
         {/* 記事本文 */}
         <article className="bg-gray-900 rounded-2xl p-8 mb-8">
+          {post.tag && (
+            <span className={`inline-block text-xs px-2.5 py-1 rounded-full border mb-4 ${TAG_COLORS[post.tag as ShareTag] ?? "bg-gray-700 text-gray-300 border-gray-600"}`}>
+              {post.tag}
+            </span>
+          )}
           <h1 className="text-2xl font-bold text-white mb-4">{post.title}</h1>
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
@@ -102,6 +115,9 @@ function SharePostContent() {
               )}
               <span className="text-gray-300 text-sm">{post.authorName}</span>
               <span className="text-gray-600 text-xs">{new Date(post.createdAt).toLocaleDateString("ja-JP")}</span>
+              {post.updatedAt && (
+                <span className="text-gray-600 text-xs">（最終更新：{new Date(post.updatedAt).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" })}）</span>
+              )}
             </div>
             {user && user.uid === post.authorUid && (
               <button

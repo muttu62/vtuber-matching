@@ -127,6 +127,9 @@ export function toTagArray(value: string | string[] | undefined): string[] {
 
 // ---- みんなと共有（共有ボード）----
 
+export const SHARE_TAGS = ["初心者向け", "ツール・機材", "クリエイティブ", "伸ばし方・考え方", "最新情報"] as const;
+export type ShareTag = typeof SHARE_TAGS[number];
+
 export type SharePost = {
   id: string;
   authorUid: string;
@@ -134,7 +137,9 @@ export type SharePost = {
   authorAvatarUrl?: string;
   title: string;
   body: string;
+  tag: ShareTag;
   createdAt: string;
+  updatedAt?: string;
   commentCount?: number;
 };
 
@@ -168,6 +173,13 @@ export async function createSharePost(data: Omit<SharePost, "id">): Promise<stri
 
 export async function deleteSharePost(postId: string): Promise<void> {
   await deleteDoc(doc(db, "share_posts", postId));
+}
+
+export async function updateSharePost(postId: string, data: { title: string; body: string; tag: ShareTag }): Promise<void> {
+  await updateDoc(doc(db, "share_posts", postId), {
+    ...data,
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 export async function getShareComments(postId: string): Promise<ShareComment[]> {

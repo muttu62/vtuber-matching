@@ -12,6 +12,7 @@ function ShareBoardContent() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     getSharePosts().then(setPosts).finally(() => setLoading(false));
@@ -21,6 +22,7 @@ function ShareBoardContent() {
     e.preventDefault();
     if (!user || !title.trim() || !body.trim()) return;
     setSubmitting(true);
+    setSubmitError("");
     try {
       const profile = await getUserProfile(user.uid);
       const newPost: Omit<SharePost, "id"> = {
@@ -37,6 +39,8 @@ function ShareBoardContent() {
       setTitle("");
       setBody("");
       setShowForm(false);
+    } catch (err: any) {
+      setSubmitError("投稿に失敗しました: " + (err?.message ?? err));
     } finally {
       setSubmitting(false);
     }
@@ -88,6 +92,7 @@ function ShareBoardContent() {
               />
               <p className="text-gray-500 text-xs mt-1 text-right">{body.length} / 2000</p>
             </div>
+            {submitError && <p className="text-red-400 text-sm">{submitError}</p>}
             <button
               type="submit"
               disabled={submitting || !title.trim() || !body.trim()}

@@ -27,6 +27,29 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']);
     }
 
+    // share_posts コレクション
+    // - 読み取り: 全員可（未認証でも閲覧できる）
+    // - 作成: 認証済みかつ authorUid が自分の UID
+    // - 削除: 投稿者本人のみ
+    match /share_posts/{postId} {
+      allow read: if true;
+      allow create: if request.auth != null &&
+        request.auth.uid == request.resource.data.authorUid;
+      allow delete: if request.auth != null &&
+        request.auth.uid == resource.data.authorUid;
+      allow update: if request.auth != null &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount']);
+    }
+
+    // share_comments コレクション
+    // - 読み取り: 全員可
+    // - 作成: 認証済みかつ authorUid が自分の UID
+    match /share_comments/{commentId} {
+      allow read: if true;
+      allow create: if request.auth != null &&
+        request.auth.uid == request.resource.data.authorUid;
+    }
+
     // 上記以外のすべてのドキュメントへのアクセスを拒否
     match /{document=**} {
       allow read, write: if false;

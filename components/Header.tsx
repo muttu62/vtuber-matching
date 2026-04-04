@@ -64,15 +64,50 @@ export default function Header() {
 
   return (
     <header className="bg-gray-900 border-b border-gray-800">
-      <div className="max-w-5xl mx-auto px-4 py-2 flex flex-col md:flex-row md:h-14 md:items-center justify-between gap-1">
-        <Link href="/about" className="text-white font-bold text-lg tracking-tight">
-          <img src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp" alt="Vクリ" className="h-8 w-auto" />
-        </Link>
-        <nav ref={navRef} className="flex flex-col md:flex-row md:items-center gap-1">
-          {/* 探す（公開） */}
+      <div className="max-w-5xl mx-auto px-4">
+        {/* モバイル: 2行レイアウト / デスクトップ: 1行 */}
+        <div className="flex items-center justify-between h-12 md:hidden">
+          {/* 1行目: ロゴ（左） */}
+          <Link href="/about" className="text-white font-bold text-lg tracking-tight">
+            <img src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp" alt="Vクリ" className="h-7 w-auto" />
+          </Link>
+          {/* 1行目: 申請・マイページ（右） */}
+          <nav ref={navRef} className="flex items-center gap-1">
+            {authLinks.map(({ href, label, badge }) =>
+              user ? (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`relative px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                    pathname === href
+                      ? "bg-purple-600 text-white"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800"
+                  }`}
+                >
+                  {label}
+                  {badge > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
+                      {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
+                </Link>
+              ) : (
+                <button
+                  key={href}
+                  onClick={() => setShowPopup((prev) => !prev)}
+                  className="px-2.5 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap"
+                >
+                  {label}
+                </button>
+              )
+            )}
+          </nav>
+        </div>
+        {/* 2行目: 探す・相性診断・みんなと共有（中央寄せ） */}
+        <div className="flex justify-center gap-1 pb-1.5 md:hidden">
           <Link
             href="/explore"
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-center md:text-left ${
+            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
               pathname === "/explore"
                 ? "bg-purple-600 text-white"
                 : "text-gray-400 hover:text-white hover:bg-gray-800"
@@ -80,13 +115,11 @@ export default function Header() {
           >
             探す
           </Link>
-
-          {/* 相性診断・みんなと共有（公開） */}
           {publicLinks.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-center md:text-left ${
+              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                 pathname === href
                   ? "bg-purple-600 text-white"
                   : "text-gray-400 hover:text-white hover:bg-gray-800"
@@ -95,37 +128,67 @@ export default function Header() {
               {label}
             </Link>
           ))}
+        </div>
 
-          {/* 申請・マイページ（要ログイン） */}
-          {authLinks.map(({ href, label, badge }) =>
-            user ? (
+        {/* デスクトップ: 1行レイアウト */}
+        <div className="hidden md:flex md:h-14 md:items-center justify-between">
+          <Link href="/about" className="text-white font-bold text-lg tracking-tight">
+            <img src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp" alt="Vクリ" className="h-8 w-auto" />
+          </Link>
+          <nav ref={navRef} className="flex items-center gap-1">
+            <Link
+              href="/explore"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                pathname === "/explore"
+                  ? "bg-purple-600 text-white"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800"
+              }`}
+            >
+              探す
+            </Link>
+            {publicLinks.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
-                className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap text-center md:text-left ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                   pathname === href
                     ? "bg-purple-600 text-white"
                     : "text-gray-400 hover:text-white hover:bg-gray-800"
                 }`}
               >
                 {label}
-                {badge > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
-                    {badge > 99 ? "99+" : badge}
-                  </span>
-                )}
               </Link>
-            ) : (
-              <button
-                key={href}
-                onClick={() => setShowPopup((prev) => !prev)}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap text-center md:text-left"
-              >
-                {label}
-              </button>
-            )
-          )}
-        </nav>
+            ))}
+            {authLinks.map(({ href, label, badge }) =>
+              user ? (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                    pathname === href
+                      ? "bg-purple-600 text-white"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800"
+                  }`}
+                >
+                  {label}
+                  {badge > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
+                      {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
+                </Link>
+              ) : (
+                <button
+                  key={href}
+                  onClick={() => setShowPopup((prev) => !prev)}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors whitespace-nowrap"
+                >
+                  {label}
+                </button>
+              )
+            )}
+          </nav>
+        </div>
       </div>
 
       {/* 未ログイン時のポップアップ（fixed でスマホでも確実に表示） */}

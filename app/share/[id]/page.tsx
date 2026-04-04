@@ -94,7 +94,7 @@ function SharePostContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 py-12 px-4">
+    <div className="min-h-screen bg-gray-950 py-12 px-1 md:px-4">
       <div className="max-w-2xl mx-auto">
         <Link href="/share" className="text-gray-400 hover:text-white text-sm mb-6 inline-block">← 一覧に戻る</Link>
 

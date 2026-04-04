@@ -41,7 +41,7 @@ function SharePostContent() {
         postId: id,
         authorUid: user.uid,
         authorName: profile?.name || "名前未設定",
-        authorAvatarUrl: profile?.avatarUrl || undefined,
+        ...(profile?.avatarUrl ? { authorAvatarUrl: profile.avatarUrl } : {}),
         body: commentBody.trim(),
         createdAt: new Date().toISOString(),
       };

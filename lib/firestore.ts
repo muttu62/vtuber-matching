@@ -1,4 +1,4 @@
-import { doc, setDoc, getDoc, collection, getDocs, addDoc, query, where, updateDoc, orderBy, limit, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs, addDoc, query, where, updateDoc, limit, deleteDoc } from "firebase/firestore";
 import { db } from "./firebase";
 
 export type UserProfile = {
@@ -114,16 +114,6 @@ export async function getSentMatches(uid: string): Promise<Match[]> {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Match));
 }
 
-export async function getSentMatchesToday(uid: string): Promise<Match[]> {
-  const todayStart = new Date();
-  todayStart.setUTCHours(0, 0, 0, 0);
-  const todayStartISO = todayStart.toISOString();
-  const q = query(collection(db, "matches"), where("sender_id", "==", uid));
-  const snap = await getDocs(q);
-  return snap.docs
-    .map((d) => ({ id: d.id, ...d.data() } as Match))
-    .filter((m) => m.created_at >= todayStartISO);
-}
 
 export async function updateMatchStatus(matchId: string, status: Match["status"]): Promise<void> {
   await updateDoc(doc(db, "matches", matchId), { status });
@@ -159,9 +149,11 @@ export type ShareComment = {
 };
 
 export async function getSharePosts(maxCount = 50): Promise<SharePost[]> {
-  const q = query(collection(db, "share_posts"), orderBy("createdAt", "desc"), limit(maxCount));
+  const q = query(collection(db, "share_posts"), limit(maxCount));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as SharePost));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as SharePost))
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function getSharePost(postId: string): Promise<SharePost | null> {
@@ -179,9 +171,12 @@ export async function deleteSharePost(postId: string): Promise<void> {
 }
 
 export async function getShareComments(postId: string): Promise<ShareComment[]> {
-  const q = query(collection(db, "share_comments"), where("postId", "==", postId), orderBy("createdAt", "asc"));
+  // orderBy との複合インデックス不要にするため where のみ使用し、クライアント側でソート
+  const q = query(collection(db, "share_comments"), where("postId", "==", postId));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ShareComment));
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() } as ShareComment))
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
 export async function createShareComment(data: Omit<ShareComment, "id">): Promise<void> {

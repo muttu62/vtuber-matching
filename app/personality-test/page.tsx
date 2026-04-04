@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../lib/AuthContext";
-import { updateUserProfile } from "../../lib/firestore";
+import { getUserProfile, updateUserProfile } from "../../lib/firestore";
 
 const QUESTIONS = [
   "気が乗らないときでも配信・作業を続けられる",   // Q1 idx 0
@@ -88,15 +88,36 @@ function calcResult(answers: number[]): TypeDef {
   return best;
 }
 
+// personalityType 文字列（例: "🎭ムードメーカー型"）から TypeDef を逆引き
+function findTypeByLabel(label: string): TypeDef | null {
+  return TYPES.find((t) => label === `${t.emoji}${t.name}`) ?? null;
+}
+
 export default function PersonalityTestPage() {
   const { user } = useAuth();
   const router = useRouter();
+
+  // 診断済み結果の表示モード
+  const [existingType, setExistingType] = useState<TypeDef | null | undefined>(undefined);
+  const [showRetry, setShowRetry] = useState(false);
 
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [result, setResult] = useState<TypeDef | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // ログイン済みなら既存の診断結果を取得
+  useEffect(() => {
+    if (!user) {
+      setExistingType(null);
+      return;
+    }
+    getUserProfile(user.uid).then((p) => {
+      const label = p?.personalityType;
+      setExistingType(label ? (findTypeByLabel(label) ?? null) : null);
+    });
+  }, [user]);
 
   const handleAnswer = (score: number) => {
     const newAnswers = [...answers, score];
@@ -116,12 +137,82 @@ export default function PersonalityTestPage() {
     try {
       await updateUserProfile(user.uid, { personalityType: result.emoji + result.name });
       setSaved(true);
+      setExistingType(result);
     } finally {
       setSaving(false);
     }
   };
 
-  // 結果画面
+  const startRetry = () => {
+    setStep(0);
+    setAnswers([]);
+    setResult(null);
+    setSaved(false);
+    setShowRetry(true);
+  };
+
+  // 既存結果を表示する条件:
+  // - ロード完了 (existingType !== undefined)
+  // - 診断済み (existingType !== null)
+  // - やり直しモードでない (!showRetry)
+  // - 新しい診断を完了していない (step !== 9)
+  const showExisting = existingType !== undefined && existingType !== null && !showRetry && step !== 9;
+
+  // ---- 既存結果表示 ----
+  if (showExisting) {
+    const shareText = encodeURIComponent(
+      `私は【${existingType.emoji}${existingType.name}】でした！🎉 Vクリマッチングで相性の良いVTuberを探そう👇 https://v-kuri.com/personality-test #Vクリマッチング #VTuber`
+    );
+    return (
+      <div className="min-h-screen bg-gray-950 py-12 px-4">
+        <div className="max-w-lg mx-auto">
+          <div className="bg-gray-900 rounded-2xl p-8 text-center">
+            <p className="text-gray-400 text-xs mb-4">あなたの診断結果</p>
+            <div className="text-7xl mb-4">{existingType.emoji}</div>
+            <p className="text-gray-400 text-sm mb-1">あなたのタイプは</p>
+            <h1 className="text-3xl font-bold text-white mb-3">{existingType.name}</h1>
+            <p className="text-gray-300 text-sm leading-relaxed mb-6">{existingType.desc}</p>
+
+            <div className="bg-gray-800 rounded-xl p-4 mb-6">
+              <p className="text-gray-400 text-xs mb-3">相性の良いタイプ</p>
+              <div className="flex justify-center gap-2 flex-wrap">
+                {existingType.compatible.map((c) => (
+                  <span key={c} className="text-sm bg-purple-900/40 text-purple-300 px-3 py-1.5 rounded-full">
+                    {c}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <a
+                href={`https://twitter.com/intent/tweet?text=${shareText}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg transition-colors text-center"
+              >
+                𝕏でシェアする
+              </a>
+              <button
+                onClick={() => router.push("/explore")}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
+              >
+                相性の良い人を探す
+              </button>
+              <button
+                onClick={startRetry}
+                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-colors"
+              >
+                🔄 やり直す
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- 新しい診断の結果画面 ----
   if (step === 9 && result) {
     const shareText = encodeURIComponent(
       `私は【${result.emoji}${result.name}】でした！🎉 Vクリマッチングで相性の良いVTuberを探そう👇 https://v-kuri.com/personality-test #Vクリマッチング #VTuber`
@@ -139,10 +230,7 @@ export default function PersonalityTestPage() {
               <p className="text-gray-400 text-xs mb-3">相性の良いタイプ</p>
               <div className="flex justify-center gap-2 flex-wrap">
                 {result.compatible.map((c) => (
-                  <span
-                    key={c}
-                    className="text-sm bg-purple-900/40 text-purple-300 px-3 py-1.5 rounded-full"
-                  >
+                  <span key={c} className="text-sm bg-purple-900/40 text-purple-300 px-3 py-1.5 rounded-full">
                     {c}
                   </span>
                 ))}
@@ -180,7 +268,16 @@ export default function PersonalityTestPage() {
     );
   }
 
-  // 質問画面
+  // ---- 質問画面（ロード中 or 未診断 or やり直し中） ----
+  // existingType が undefined のうちはローディング中のため表示しない
+  if (existingType === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+        <p className="text-gray-400">読み込み中...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 py-12 px-4">
       <div className="max-w-lg mx-auto">

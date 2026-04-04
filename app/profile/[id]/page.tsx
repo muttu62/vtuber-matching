@@ -8,7 +8,6 @@ import {
   PublicUserProfile,
   getMatchBetween,
   sendMatchRequest,
-  getSentMatchesToday,
   toTagArray,
   Match,
 } from "../../../lib/firestore";
@@ -22,7 +21,6 @@ export default function UserProfilePage() {
   const [loading, setLoading] = useState(true);
   const [existingMatch, setExistingMatch] = useState<Match | null>(null);
   const [sending, setSending] = useState(false);
-  const [limitReached, setLimitReached] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -34,13 +32,6 @@ export default function UserProfilePage() {
   useEffect(() => {
     if (!user || !id || user.uid === id) return;
     getMatchBetween(user.uid, id).then(setExistingMatch);
-  }, [user, id]);
-
-  useEffect(() => {
-    if (!user || !id || user.uid === id) return;
-    getSentMatchesToday(user.uid).then((matches) => {
-      setLimitReached(matches.length >= 1);
-    });
   }, [user, id]);
 
   const handleSendMatch = async () => {
@@ -295,10 +286,6 @@ export default function UserProfilePage() {
                 >
                   申請済み
                 </button>
-              ) : limitReached ? (
-                <p className="text-center text-yellow-400 text-sm py-3">
-                  本日の申請可能枠（1/1）は使用済みです
-                </p>
               ) : (
                 <button
                   onClick={() => {

@@ -26,7 +26,7 @@ function ShareBoardContent() {
       const newPost: Omit<SharePost, "id"> = {
         authorUid: user.uid,
         authorName: profile?.name || "名前未設定",
-        authorAvatarUrl: profile?.avatarUrl || undefined,
+        ...(profile?.avatarUrl ? { authorAvatarUrl: profile.avatarUrl } : {}),
         title: title.trim(),
         body: body.trim(),
         createdAt: new Date().toISOString(),

@@ -7,6 +7,11 @@ import Footer from "../components/Footer";
 export const metadata: Metadata = {
   title: "Vクリ",
   description: "VTuberとクリエイターのコラボ相手マッチングサービス",
+  icons: {
+    icon: "https://res.cloudinary.com/djl6ceb4w/image/upload/v1775340349/favicon_ktprcr.png",
+    shortcut: "https://res.cloudinary.com/djl6ceb4w/image/upload/v1775340349/favicon_ktprcr.png",
+    apple: "https://res.cloudinary.com/djl6ceb4w/image/upload/v1775340349/favicon_ktprcr.png",
+  },
 };
 
 export default function RootLayout({

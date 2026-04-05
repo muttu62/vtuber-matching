@@ -4,8 +4,9 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../../lib/AuthContext";
 import {
-  SharePost, ShareComment, ShareTag, SHARE_TAGS,
+  SharePost, ShareComment, ShareTag, SHARE_TAGS, Match,
   getSharePost, getShareComments, createShareComment, deleteSharePost, getUserProfile,
+  getMatchBetween, sendMatchRequest,
 } from "../../../lib/firestore";
 
 const TAG_COLORS: Record<ShareTag, string> = {
@@ -28,6 +29,8 @@ function SharePostContent() {
   const [commentBody, setCommentBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [existingMatch, setExistingMatch] = useState<Match | null>(null);
+  const [sendingMatch, setSendingMatch] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -38,6 +41,22 @@ function SharePostContent() {
       })
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!user || !post || user.uid === post.authorUid) return;
+    getMatchBetween(user.uid, post.authorUid).then(setExistingMatch);
+  }, [user, post]);
+
+  const handleSendMatch = async () => {
+    if (!user || !post) return;
+    setSendingMatch(true);
+    try {
+      await sendMatchRequest(user.uid, post.authorUid);
+      setExistingMatch({ id: "", sender_id: user.uid, receiver_id: post.authorUid, status: "pending", created_at: new Date().toISOString() });
+    } finally {
+      setSendingMatch(false);
+    }
+  };
 
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,8 +125,8 @@ function SharePostContent() {
             </span>
           )}
           <h1 className="text-2xl font-bold text-white mb-4">{post.title}</h1>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {post.authorAvatarUrl ? (
                 <img src={post.authorAvatarUrl} alt={post.authorName} className="w-7 h-7 rounded-full object-cover" />
               ) : (
@@ -119,15 +138,33 @@ function SharePostContent() {
                 <span className="text-gray-600 text-xs">（最終更新：{new Date(post.updatedAt).toLocaleDateString("ja-JP", { month: "numeric", day: "numeric" })}）</span>
               )}
             </div>
-            {user && user.uid === post.authorUid && (
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="text-red-400 hover:text-red-300 text-xs disabled:opacity-50"
-              >
-                {deleting ? "削除中..." : "削除"}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {/* フレンド申請ボタン（自分の投稿以外） */}
+              {user && user.uid !== post.authorUid && (
+                existingMatch ? (
+                  <button disabled className="text-xs px-3 py-1 rounded-full bg-gray-700 text-gray-500 cursor-not-allowed border border-gray-600">
+                    申請済み
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSendMatch}
+                    disabled={sendingMatch}
+                    className="text-xs px-3 py-1 rounded-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white transition-colors"
+                  >
+                    {sendingMatch ? "送信中..." : "フレンド申請する"}
+                  </button>
+                )
+              )}
+              {user && user.uid === post.authorUid && (
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="text-red-400 hover:text-red-300 text-xs disabled:opacity-50"
+                >
+                  {deleting ? "削除中..." : "削除"}
+                </button>
+              )}
+            </div>
           </div>
           <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{post.body}</p>
         </article>

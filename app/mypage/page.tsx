@@ -49,38 +49,7 @@ export default function MyPage() {
   useEffect(() => {
     if (!user) return;
     getUserProfile(user.uid)
-      .then((p) => {
-        setProfile(p);
-        // YouTubeキャッシュが未設定 or 7日以上経過していればバックグラウンドで更新
-        if (p?.youtubeUrl) {
-          const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-          const cachedAt = p.youtubeVideosCachedAt ? new Date(p.youtubeVideosCachedAt).getTime() : 0;
-          if (Date.now() - cachedAt > SEVEN_DAYS_MS) {
-            (async () => {
-              try {
-                const token = await user.getIdToken();
-                const res = await fetch("/api/youtube", {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({ url: p.youtubeUrl, type: "videos" }),
-                });
-                const data = await res.json();
-                if (data.videos) {
-                  await updateUserProfile(user.uid, {
-                    youtubeVideos: data.videos,
-                    youtubeVideosCachedAt: new Date().toISOString(),
-                  });
-                }
-              } catch (e) {
-                console.error("[youtube cache]", e);
-              }
-            })();
-          }
-        }
-      })
+      .then(setProfile)
       .finally(() => setFetching(false));
   }, [user]);
 
@@ -431,12 +400,12 @@ export default function MyPage() {
             <button
               onClick={handleTogglePublic}
               disabled={savingPublic}
-              className={`relative w-12 h-6 rounded-full transition-colors disabled:opacity-50 ${
+              className={`relative w-12 h-6 rounded-full transition-colors disabled:opacity-50 overflow-hidden shrink-0 ${
                 !isPublic ? "bg-purple-600" : "bg-gray-600"
               }`}
             >
-              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                !isPublic ? "translate-x-7" : "translate-x-1"
+              <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                !isPublic ? "translate-x-6" : "translate-x-0"
               }`} />
             </button>
           </div>

@@ -3,7 +3,6 @@ import "./globals.css";
 import { AuthProvider } from "../lib/AuthContext";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import OnboardingModal from "../components/OnboardingModal";
 
 export const metadata: Metadata = {
   title: "Vクリ",
@@ -27,7 +26,6 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
-          <OnboardingModal />
         </AuthProvider>
       </body>
     </html>

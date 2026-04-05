@@ -1,5 +1,7 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getAllUsers, getUserProfile, PublicUserProfile, toTagArray } from "../../lib/firestore";
@@ -39,6 +41,7 @@ function ExploreContent() {
   const [filter, setFilter] = useState<FilterTab>("all");
   const [showPickup, setShowPickup] = useState(false);
   const [showPersonalityPromo, setShowPersonalityPromo] = useState(false);
+  const tourStartedRef = useRef(false);
 
   // URLパラメータ tab=compatibility で相性タブを自動選択
   useEffect(() => {
@@ -62,6 +65,88 @@ function ExploreContent() {
       setMyPersonalityType(p?.personalityType ?? null);
     });
   }, [user]);
+
+  // driver.js オンボーディングツアー
+  useEffect(() => {
+    if (loading || !user || tourStartedRef.current) return;
+    if (localStorage.getItem("onboarding_completed")) return;
+    tourStartedRef.current = true;
+
+    const timer = setTimeout(() => {
+      // 表示されている要素を取得（モバイル/デスクトップ対応）
+      const getEl = (key: string): HTMLElement | undefined => {
+        const els = Array.from(
+          document.querySelectorAll<HTMLElement>(`[data-tour="${key}"]`)
+        );
+        return els.find((el) => el.getBoundingClientRect().width > 0) ?? els[0] ?? undefined;
+      };
+
+      const driverObj = driver({
+        showProgress: true,
+        progressText: "{{current}} / {{total}}",
+        nextBtnText: "次へ",
+        prevBtnText: "戻る",
+        doneBtnText: "はじめる",
+        onDestroyed: () => {
+          localStorage.setItem("onboarding_completed", "true");
+        },
+        steps: [
+          {
+            popover: {
+              title: "ようこそ、Vクリマッチングへ！🎉",
+              description: "ここから気になるユーザーを探すことができます。",
+            },
+          },
+          {
+            element: getEl("tabs"),
+            popover: {
+              title: "ラベルで絞り込もう",
+              description: "ラベルで分類ごとにユーザーをチェックできます。",
+            },
+          },
+          {
+            element: getEl("compatibility-tab"),
+            popover: {
+              title: "相性のいい人",
+              description: "相性診断の結果から導き出された、あなたと相性ぴったりのおすすめの人です。",
+            },
+          },
+          {
+            element: getEl("diagnosis-nav"),
+            popover: {
+              title: "相性診断はこちら",
+              description: "相性診断は「相性診断」タブから行うことができます。",
+            },
+          },
+          {
+            element: getEl("share-nav"),
+            popover: {
+              title: "みんなと共有",
+              description: "VTuber活動に役立つ情報をみんなと共有できる場所です。",
+            },
+          },
+          {
+            element: getEl("mypage-nav"),
+            popover: {
+              title: "プロフィールを設定しよう",
+              description:
+                "まずはマイページにてプロフィールと非公開の連絡先を設定しましょう。非公開の連絡先が設定されていないと、相手と連絡をとることができません。",
+            },
+          },
+          {
+            popover: {
+              title: "準備完了！✨",
+              description: "それではよいVライフを！",
+            },
+          },
+        ],
+      });
+
+      driverObj.drive();
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [user, loading]);
 
   // 1日1回ポップアップ表示（ログイン済み・未診断・全データ読込後）
   useEffect(() => {
@@ -170,10 +255,11 @@ function ExploreContent() {
       <h1 className="text-2xl font-bold text-white mb-6">ユーザーを探す</h1>
 
       {/* フィルタータブ */}
-      <div className="flex gap-2 mb-6 flex-wrap">
+      <div className="flex gap-2 mb-6 flex-wrap" data-tour="tabs">
         {tabs.map((tab) => (
           <button
             key={tab.key}
+            data-tour={tab.key === "compatible" ? "compatibility-tab" : undefined}
             onClick={() => setFilter(tab.key)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               filter === tab.key

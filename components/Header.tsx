@@ -53,13 +53,13 @@ export default function Header() {
   }, [user]);
 
   const publicLinks = [
-    { href: "/diagnosis", label: "相性診断" },
-    { href: "/share", label: "みんなと共有" },
+    { href: "/diagnosis", label: "相性診断", tour: "diagnosis-nav" },
+    { href: "/share", label: "みんなと共有", tour: "share-nav" },
   ];
 
   const authLinks = [
-    { href: "/matches", label: "申請", badge: pendingCount },
-    { href: "/mypage", label: "マイページ", badge: 0 },
+    { href: "/matches", label: "申請", badge: pendingCount, tour: "" },
+    { href: "/mypage", label: "マイページ", badge: 0, tour: "mypage-nav" },
   ];
 
   return (
@@ -73,11 +73,12 @@ export default function Header() {
           </Link>
           {/* 1行目: 申請・マイページ（右） */}
           <nav ref={navRef} className="flex items-center gap-1">
-            {authLinks.map(({ href, label, badge }) =>
+            {authLinks.map(({ href, label, badge, tour }) =>
               user ? (
                 <Link
                   key={href}
                   href={href}
+                  data-tour={tour || undefined}
                   className={`relative px-2.5 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                     pathname === href
                       ? "bg-purple-600 text-white"
@@ -115,10 +116,11 @@ export default function Header() {
           >
             探す
           </Link>
-          {publicLinks.map(({ href, label }) => (
+          {publicLinks.map(({ href, label, tour }) => (
             <Link
               key={href}
               href={href}
+              data-tour={tour}
               className={`px-3 py-1.5 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
                 pathname === href
                   ? "bg-purple-600 text-white"
@@ -146,10 +148,11 @@ export default function Header() {
             >
               探す
             </Link>
-            {publicLinks.map(({ href, label }) => (
+            {publicLinks.map(({ href, label, tour }) => (
               <Link
                 key={href}
                 href={href}
+                data-tour={tour}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                   pathname === href
                     ? "bg-purple-600 text-white"
@@ -159,11 +162,12 @@ export default function Header() {
                 {label}
               </Link>
             ))}
-            {authLinks.map(({ href, label, badge }) =>
+            {authLinks.map(({ href, label, badge, tour }) =>
               user ? (
                 <Link
                   key={href}
                   href={href}
+                  data-tour={tour || undefined}
                   className={`relative px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                     pathname === href
                       ? "bg-purple-600 text-white"

@@ -461,28 +461,6 @@ export default function MyPage() {
           >
             🎭 {profile?.personalityType ? "性格診断をやり直す" : "性格診断で相性のいい人を探す"}
           </button>
-          {user && (() => {
-            const today = new Date().toISOString().slice(0, 10);
-            const sharedToday = typeof window !== "undefined"
-              && localStorage.getItem("x_shared_date") === today;
-            return (
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`【コラボ募集中】Vクリでコラボ相手を探しています！気になる方はこちらからどうぞ👇\nhttps://v-kuri.com/profile/${user.uid}\n#Vtuber募集 #コラボ募集 #個人vtuber`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => localStorage.setItem("x_shared_date", today)}
-                className={`block w-full font-bold py-3 rounded-lg transition-colors text-center ${
-                  sharedToday
-                    ? "bg-sky-700 text-sky-200 cursor-default"
-                    : "bg-sky-500 hover:bg-sky-600 text-white"
-                }`}
-              >
-                {sharedToday
-                  ? "✅ 本日シェア済み（申請可能枠+5）"
-                  : "𝕏でマイページを共有して申請可能枠を増やす（+5）"}
-              </a>
-            );
-          })()}
           <button
             onClick={handleLogout}
             className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-colors"

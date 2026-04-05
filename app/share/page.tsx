@@ -122,13 +122,37 @@ function ShareBoardContent() {
       <div className="max-w-2xl mx-auto">
 
         {/* ヘッダー */}
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h1 className="text-2xl font-bold text-white">みんなと共有</h1>
-            <p className="text-gray-400 text-sm mt-1">ナレッジを共有するボードです</p>
+        <div className="mb-3">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-white">みんなと共有</h1>
+              <p className="text-gray-400 text-sm mt-1">ナレッジを共有するボードです</p>
+            </div>
+            {/* デスクトップのみ右側にボタン表示 */}
+            {user && (
+              <div className="hidden md:flex gap-2 shrink-0">
+                <button
+                  onClick={() => { setShowMyPosts(false); setShowForm((v) => !v); setSubmitError(""); }}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-2 rounded-lg text-sm transition-colors"
+                >
+                  {showForm ? "閉じる" : "記事を書く"}
+                </button>
+                <button
+                  onClick={() => { setShowForm(false); setShowMyPosts((v) => !v); }}
+                  className={`font-bold px-3 py-2 rounded-lg text-sm transition-colors border ${
+                    showMyPosts
+                      ? "bg-gray-700 border-gray-600 text-white"
+                      : "bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 hover:text-white"
+                  }`}
+                >
+                  {showMyPosts ? "閉じる" : "過去投稿を編集"}
+                </button>
+              </div>
+            )}
           </div>
+          {/* スマホ：テキストの下にボタンを表示 */}
           {user && (
-            <div className="flex gap-2 shrink-0">
+            <div className="flex md:hidden gap-2 mt-3">
               <button
                 onClick={() => { setShowMyPosts(false); setShowForm((v) => !v); setSubmitError(""); }}
                 className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-2 rounded-lg text-sm transition-colors"

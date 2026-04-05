@@ -104,10 +104,10 @@ export default function Header() {
           </nav>
         </div>
         {/* 2行目: 探す・相性診断・みんなと共有（中央寄せ） */}
-        <div className="flex justify-center gap-1 pb-1.5 md:hidden">
+        <div className="flex justify-center gap-1 py-2 md:hidden">
           <Link
             href="/explore"
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`px-3 py-1.5 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
               pathname === "/explore"
                 ? "bg-purple-600 text-white"
                 : "text-gray-400 hover:text-white hover:bg-gray-800"
@@ -119,7 +119,7 @@ export default function Header() {
             <Link
               key={href}
               href={href}
-              className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-base font-medium transition-colors whitespace-nowrap ${
                 pathname === href
                   ? "bg-purple-600 text-white"
                   : "text-gray-400 hover:text-white hover:bg-gray-800"

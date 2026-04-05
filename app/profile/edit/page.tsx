@@ -51,10 +51,6 @@ export default function ProfileEditPage() {
   const [activityTimes, setActivityTimes] = useState<string[]>([]);
   const savedActivityTimesRef = useRef<string[]>([]);
 
-  const [youtubeTags, setYoutubeTags] = useState<string[]>([]);
-  const savedYoutubeTagsRef = useRef<string[]>([]);
-  const [loadingTags, setLoadingTags] = useState(false);
-  const [tagError, setTagError] = useState("");
 
   const [fetching, setFetching] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -86,8 +82,6 @@ export default function ProfileEditPage() {
           setGenres(g); savedGenresRef.current = g;
           setGenreCreators(gc); savedGenreCreatorsRef.current = gc;
           setActivityTimes(at); savedActivityTimesRef.current = at;
-          setYoutubeTags(profile.youtubeTags ?? []);
-          savedYoutubeTagsRef.current = profile.youtubeTags ?? [];
         }
       })
       .finally(() => setFetching(false));
@@ -104,28 +98,6 @@ export default function ProfileEditPage() {
       }
       return next;
     });
-  };
-
-  const handleFetchTags = async () => {
-    if (!form.youtubeUrl || !user) return;
-    setLoadingTags(true);
-    setTagError("");
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch("/api/youtube", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ url: form.youtubeUrl }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setTagError(data.error || "取得に失敗しました"); return; }
-      if (data.tags.length === 0) { setTagError("タグが見つかりませんでした"); return; }
-      setYoutubeTags(data.tags);
-    } catch {
-      setTagError("取得に失敗しました");
-    } finally {
-      setLoadingTags(false);
-    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -155,8 +127,6 @@ export default function ProfileEditPage() {
       if (JSON.stringify(genres) !== JSON.stringify(savedGenresRef.current)) updates.genre = genres;
       if (JSON.stringify(genreCreators) !== JSON.stringify(savedGenreCreatorsRef.current)) updates.genreCreator = genreCreators;
       if (JSON.stringify(activityTimes) !== JSON.stringify(savedActivityTimesRef.current)) updates.activityTime = activityTimes;
-      if (JSON.stringify(youtubeTags) !== JSON.stringify(savedYoutubeTagsRef.current)) updates.youtubeTags = youtubeTags;
-
       if (Object.keys(updates).length > 0) {
         await updateUserProfile(user.uid, updates);
         savedRef.current = { ...form };
@@ -164,7 +134,6 @@ export default function ProfileEditPage() {
         savedGenresRef.current = genres;
         savedGenreCreatorsRef.current = genreCreators;
         savedActivityTimesRef.current = activityTimes;
-        savedYoutubeTagsRef.current = youtubeTags;
       }
 
       router.push("/mypage");
@@ -310,34 +279,14 @@ export default function ProfileEditPage() {
 
           <div>
             <label className="block text-gray-300 text-sm mb-1">YouTubeチャンネルURL</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                name="youtubeUrl"
-                value={form.youtubeUrl}
-                onChange={handleChange}
-                placeholder="https://www.youtube.com/@channelname"
-                className="flex-1 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
-              />
-              <button
-                type="button"
-                onClick={handleFetchTags}
-                disabled={loadingTags || !form.youtubeUrl}
-                className="px-4 py-3 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
-              >
-                {loadingTags ? "取得中..." : "タグを自動取得"}
-              </button>
-            </div>
-            {tagError && <p className="text-red-400 text-xs mt-1">{tagError}</p>}
-            {youtubeTags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {youtubeTags.map((tag) => (
-                  <span key={tag} className="text-xs bg-red-900/40 text-red-300 px-2 py-1 rounded-full">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
+            <input
+              type="text"
+              name="youtubeUrl"
+              value={form.youtubeUrl}
+              onChange={handleChange}
+              placeholder="https://www.youtube.com/@channelname"
+              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+            />
           </div>
 
           <div>

@@ -4,9 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../../lib/AuthContext";
 import {
-  SharePost, ShareComment, ShareTag, SHARE_TAGS, Match,
+  SharePost, ShareComment, ShareTag, SHARE_TAGS,
   getSharePost, getShareComments, createShareComment, deleteSharePost, getUserProfile,
-  getMatchBetween, sendMatchRequest,
 } from "../../../lib/firestore";
 
 const TAG_COLORS: Record<ShareTag, string> = {
@@ -29,8 +28,6 @@ function SharePostContent() {
   const [commentBody, setCommentBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [existingMatch, setExistingMatch] = useState<Match | null>(null);
-  const [sendingMatch, setSendingMatch] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -41,22 +38,6 @@ function SharePostContent() {
       })
       .finally(() => setLoading(false));
   }, [id]);
-
-  useEffect(() => {
-    if (!user || !post || user.uid === post.authorUid) return;
-    getMatchBetween(user.uid, post.authorUid).then(setExistingMatch);
-  }, [user, post]);
-
-  const handleSendMatch = async () => {
-    if (!user || !post) return;
-    setSendingMatch(true);
-    try {
-      await sendMatchRequest(user.uid, post.authorUid);
-      setExistingMatch({ id: "", sender_id: user.uid, receiver_id: post.authorUid, status: "pending", created_at: new Date().toISOString() });
-    } finally {
-      setSendingMatch(false);
-    }
-  };
 
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,21 +120,14 @@ function SharePostContent() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              {/* フレンド申請ボタン（自分の投稿以外） */}
+              {/* プロフィールを見るリンク（自分の投稿以外） */}
               {user && user.uid !== post.authorUid && (
-                existingMatch ? (
-                  <button disabled className="text-xs px-3 py-1 rounded-full bg-gray-700 text-gray-500 cursor-not-allowed border border-gray-600">
-                    申請済み
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleSendMatch}
-                    disabled={sendingMatch}
-                    className="text-xs px-3 py-1 rounded-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white transition-colors"
-                  >
-                    {sendingMatch ? "送信中..." : "フレンド申請する"}
-                  </button>
-                )
+                <Link
+                  href={`/profile/${post.authorUid}`}
+                  className="text-xs px-3 py-1 rounded-full bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors border border-gray-600"
+                >
+                  プロフィールを見る
+                </Link>
               )}
               {user && user.uid === post.authorUid && (
                 <button

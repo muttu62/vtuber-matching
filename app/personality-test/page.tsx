@@ -104,8 +104,6 @@ export default function PersonalityTestPage() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<number[]>([]);
   const [result, setResult] = useState<TypeDef | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
 
   // ログイン済みなら既存の診断結果を取得
   useEffect(() => {
@@ -119,27 +117,25 @@ export default function PersonalityTestPage() {
     });
   }, [user]);
 
-  const handleAnswer = (score: number) => {
+  const handleAnswer = async (score: number) => {
     const newAnswers = [...answers, score];
     if (step < 8) {
       setAnswers(newAnswers);
       setStep(step + 1);
     } else {
+      const res = calcResult(newAnswers);
       setAnswers(newAnswers);
-      setResult(calcResult(newAnswers));
+      setResult(res);
       setStep(9);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!user || !result) return;
-    setSaving(true);
-    try {
-      await updateUserProfile(user.uid, { personalityType: result.emoji + result.name });
-      setSaved(true);
-      setExistingType(result);
-    } finally {
-      setSaving(false);
+      // 診断完了時に自動保存
+      if (user) {
+        try {
+          await updateUserProfile(user.uid, { personalityType: res.emoji + res.name });
+          setExistingType(res);
+        } catch (e) {
+          console.error("[personality save]", e);
+        }
+      }
     }
   };
 
@@ -147,7 +143,6 @@ export default function PersonalityTestPage() {
     setStep(0);
     setAnswers([]);
     setResult(null);
-    setSaved(false);
     setShowRetry(true);
   };
 
@@ -238,15 +233,6 @@ export default function PersonalityTestPage() {
             </div>
 
             <div className="flex flex-col gap-3">
-              {user && (
-                <button
-                  onClick={handleSave}
-                  disabled={saving || saved}
-                  className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold py-3 rounded-lg transition-colors"
-                >
-                  {saved ? "保存済み ✓" : saving ? "保存中..." : "診断結果を保存する"}
-                </button>
-              )}
               <a
                 href={`https://twitter.com/intent/tweet?text=${shareText}`}
                 target="_blank"
@@ -257,9 +243,9 @@ export default function PersonalityTestPage() {
               </a>
               <button
                 onClick={() => router.push("/explore")}
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-colors"
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
               >
-                コラボ相手を探す
+                相性の良い相手を探す
               </button>
             </div>
           </div>

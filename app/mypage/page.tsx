@@ -204,14 +204,6 @@ export default function MyPage() {
             </div>
           )}
 
-          {/* 自己紹介 */}
-          {profile?.description && (
-            <div className="mb-4">
-              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">自己紹介</h2>
-              <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{profile.description}</p>
-            </div>
-          )}
-
           {/* 関連リンク */}
           {profile?.snsLinks && (
             <div className="mb-4">
@@ -231,24 +223,104 @@ export default function MyPage() {
             </div>
           )}
 
-          {/* 非公開の連絡先（表示のみ） */}
-          <div className="border-t border-gray-800 pt-4">
-            <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">非公開の連絡先</h2>
-            {(profile?.contactPlatform || profile?.contactValue) ? (
-              <div className="flex items-center gap-2 text-sm">
-                {profile?.contactPlatform && (
-                  <span className="bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full text-xs">
-                    {profile.contactPlatform}
-                  </span>
-                )}
-                <span className="text-white">{profile?.contactValue || ""}</span>
-              </div>
-            ) : (
-              <p className={`text-sm ${profile?.privateContact ? "text-white" : "text-gray-500"}`}>
-                {profile?.privateContact || "未設定"}
-              </p>
-            )}
+        </div>
+
+        {/* プロフィールを編集 */}
+        <button
+          onClick={() => router.push("/profile/edit")}
+          className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors mb-4"
+        >
+          プロフィールを編集
+        </button>
+
+        {/* 非公開の連絡先を編集 */}
+        <div className="bg-gray-900 rounded-2xl p-6 mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-white font-bold">非公開の連絡先を編集</h2>
+            <button
+              onClick={() => {
+                setContactPlatformInput(profile?.contactPlatform ?? "");
+                setContactValueInput(profile?.contactValue ?? (profile?.privateContact ?? ""));
+                setShowContactForm((v) => !v);
+              }}
+              className="text-purple-400 hover:text-purple-300 text-sm"
+            >
+              {showContactForm ? "閉じる" : "変更する"}
+            </button>
           </div>
+          <p className="text-gray-500 text-xs">マッチング成立した相手にのみ公開されます</p>
+          {showContactForm && (
+            <div className="mt-3 space-y-2">
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">連絡先プラットフォーム</label>
+                <input
+                  type="text"
+                  value={contactPlatformInput}
+                  onChange={(e) => setContactPlatformInput(e.target.value)}
+                  placeholder="例: Discord / X / メール"
+                  className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">連絡先（ID・アドレス）</label>
+                <input
+                  type="text"
+                  value={contactValueInput}
+                  onChange={(e) => setContactValueInput(e.target.value)}
+                  placeholder="例: username#1234 / @handle / example@mail.com"
+                  className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+                />
+              </div>
+              <button
+                onClick={handleSaveContact}
+                disabled={savingContact}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition-colors"
+              >
+                {savingContact ? "保存中..." : "保存する"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* メールアドレス変更 */}
+        <div className="bg-gray-900 rounded-2xl p-6 mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-white font-bold">メールアドレス変更</h2>
+            <button
+              onClick={() => { setShowEmailForm((v) => !v); setEmError(""); setEmSuccess(""); }}
+              className="text-purple-400 hover:text-purple-300 text-sm"
+            >
+              {showEmailForm ? "閉じる" : "変更する"}
+            </button>
+          </div>
+          <p className="text-gray-500 text-xs">現在: {user?.email}</p>
+          {emSuccess && <p className="text-green-400 text-sm mt-1">{emSuccess}</p>}
+          {showEmailForm && (
+            <div className="mt-3 space-y-2">
+              {emError && <p className="text-red-400 text-sm">{emError}</p>}
+              <input
+                type="password"
+                placeholder="現在のパスワード"
+                value={emCurrent}
+                onChange={(e) => setEmCurrent(e.target.value)}
+                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+              />
+              <input
+                type="email"
+                placeholder="新しいメールアドレス"
+                value={emNew}
+                onChange={(e) => setEmNew(e.target.value)}
+                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
+              />
+              <button
+                onClick={handleChangeEmail}
+                disabled={savingEm || !emCurrent || !emNew}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition-colors"
+              >
+                {savingEm ? "送信中..." : "確認メールを送信する"}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* パスワード変更 */}
@@ -298,97 +370,7 @@ export default function MyPage() {
           )}
         </div>
 
-        {/* メールアドレス変更 */}
-        <div className="bg-gray-900 rounded-2xl p-6 mb-4">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-white font-bold">メールアドレス変更</h2>
-            <button
-              onClick={() => { setShowEmailForm((v) => !v); setEmError(""); setEmSuccess(""); }}
-              className="text-purple-400 hover:text-purple-300 text-sm"
-            >
-              {showEmailForm ? "閉じる" : "変更する"}
-            </button>
-          </div>
-          <p className="text-gray-500 text-xs">現在: {user?.email}</p>
-          {emSuccess && <p className="text-green-400 text-sm mt-1">{emSuccess}</p>}
-          {showEmailForm && (
-            <div className="mt-3 space-y-2">
-              {emError && <p className="text-red-400 text-sm">{emError}</p>}
-              <input
-                type="password"
-                placeholder="現在のパスワード"
-                value={emCurrent}
-                onChange={(e) => setEmCurrent(e.target.value)}
-                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
-              />
-              <input
-                type="email"
-                placeholder="新しいメールアドレス"
-                value={emNew}
-                onChange={(e) => setEmNew(e.target.value)}
-                className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
-              />
-              <button
-                onClick={handleChangeEmail}
-                disabled={savingEm || !emCurrent || !emNew}
-                className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition-colors"
-              >
-                {savingEm ? "送信中..." : "確認メールを送信する"}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* 非公開の連絡先変更 */}
-        <div className="bg-gray-900 rounded-2xl p-6 mb-4">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-white font-bold">非公開の連絡先変更</h2>
-            <button
-              onClick={() => {
-                setContactPlatformInput(profile?.contactPlatform ?? "");
-                setContactValueInput(profile?.contactValue ?? (profile?.privateContact ?? ""));
-                setShowContactForm((v) => !v);
-              }}
-              className="text-purple-400 hover:text-purple-300 text-sm"
-            >
-              {showContactForm ? "閉じる" : "変更する"}
-            </button>
-          </div>
-          <p className="text-gray-500 text-xs">マッチング成立した相手にのみ公開されます</p>
-          {showContactForm && (
-            <div className="mt-3 space-y-2">
-              <div>
-                <label className="block text-gray-400 text-xs mb-1">連絡先プラットフォーム</label>
-                <input
-                  type="text"
-                  value={contactPlatformInput}
-                  onChange={(e) => setContactPlatformInput(e.target.value)}
-                  placeholder="例: Discord / X / メール"
-                  className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-gray-400 text-xs mb-1">連絡先（ID・アドレス）</label>
-                <input
-                  type="text"
-                  value={contactValueInput}
-                  onChange={(e) => setContactValueInput(e.target.value)}
-                  placeholder="例: username#1234 / @handle / example@mail.com"
-                  className="w-full p-2.5 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 text-sm"
-                />
-              </div>
-              <button
-                onClick={handleSaveContact}
-                disabled={savingContact}
-                className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-sm font-bold py-2 rounded-lg transition-colors"
-              >
-                {savingContact ? "保存中..." : "保存する"}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* アカウント公開設定 */}
+        {/* アカウントを非公開にする */}
         <div className="bg-gray-900 rounded-2xl p-6 mb-4">
           <div className="flex items-center justify-between">
             <div>
@@ -411,14 +393,8 @@ export default function MyPage() {
           </div>
         </div>
 
-        {/* ボタン群 */}
-        <div className="flex flex-col gap-3">
-          <button
-            onClick={() => router.push("/profile/edit")}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
-          >
-            公開プロフィールを編集
-          </button>
+        {/* 性格診断（2倍余白） */}
+        <div className="mt-8 flex flex-col gap-3">
           {profile?.personalityType && (
             <p className="text-center text-purple-300 text-sm">
               あなたは【{profile.personalityType}】です！
@@ -430,6 +406,10 @@ export default function MyPage() {
           >
             🎭 {profile?.personalityType ? "性格診断をやり直す" : "性格診断で相性のいい人を探す"}
           </button>
+        </div>
+
+        {/* ログアウト（2倍余白） */}
+        <div className="mt-8">
           <button
             onClick={handleLogout}
             className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-colors"

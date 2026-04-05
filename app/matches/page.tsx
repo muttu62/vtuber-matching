@@ -243,20 +243,22 @@ export default function MatchesPage() {
                   )}
 
                   {/* マッチング成立時に相手の連絡先を表示 */}
-                  {m.status === "accepted" && m.profile?.privateContact && (
+                  {m.status === "accepted" && (
                     <div className="mt-3 bg-green-900/30 border border-green-800 rounded-lg px-3 py-2">
-                      <p className="text-green-400 text-xs font-medium mb-1">非公開の連絡先</p>
-                      {(m.profile as any).contactPlatform || (m.profile as any).contactValue ? (
+                      <p className="text-green-400 text-xs font-medium mb-1">🎉 マッチング成立！非公開の連絡先</p>
+                      {m.profile?.contactPlatform || m.profile?.contactValue ? (
                         <div className="flex items-center gap-2">
-                          {(m.profile as any).contactPlatform && (
+                          {m.profile.contactPlatform && (
                             <span className="bg-green-800/50 text-green-300 px-2 py-0.5 rounded-full text-xs">
-                              {(m.profile as any).contactPlatform}
+                              {m.profile.contactPlatform}
                             </span>
                           )}
-                          <span className="text-white text-sm">{(m.profile as any).contactValue}</span>
+                          <span className="text-white text-sm">{m.profile.contactValue}</span>
                         </div>
-                      ) : (
+                      ) : m.profile?.privateContact ? (
                         <p className="text-white text-sm">{m.profile.privateContact}</p>
+                      ) : (
+                        <p className="text-gray-400 text-sm">相手がまだ連絡先を設定していません</p>
                       )}
                     </div>
                   )}

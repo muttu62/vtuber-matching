@@ -229,7 +229,7 @@ function ExploreContent() {
               <div className="flex flex-col items-center gap-4 py-10 text-center">
                 <style>{`@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}`}</style>
                 <p className="text-sm text-gray-400">ぶいくりん は こまった</p>
-                <svg width="120" height="145" viewBox="-10 -60 140 220" xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
+                <svg width="60" height="72" viewBox="-10 -60 140 220" xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
                   <g style={{animation:"float 2s ease-in-out infinite"}}>
                     <rect x="32" y="-48" width="8" height="8" fill="#7F77DD"/><rect x="88" y="-48" width="8" height="8" fill="#AFA9EC"/>
                     <rect x="32" y="-40" width="8" height="8" fill="#7F77DD"/><rect x="40" y="-40" width="8" height="8" fill="#AFA9EC"/><rect x="80" y="-40" width="8" height="8" fill="#7F77DD"/><rect x="88" y="-40" width="8" height="8" fill="#AFA9EC"/>

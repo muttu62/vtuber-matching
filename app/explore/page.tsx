@@ -100,7 +100,7 @@ function ExploreContent() {
         prevBtnText: "戻る",
         doneBtnText: "はじめる",
         showButtons: ["next", "previous", "close"],
-        onDestroyStarted: () => {
+        onDestroyed: () => {
           setIsOnboarding(false);
           localStorage.setItem("onboarding_completed", "true");
           setOnboardingDone(true);

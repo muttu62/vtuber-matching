@@ -108,7 +108,10 @@ export default function SignupPage() {
             {submitting ? "登録中..." : "登録する"}
           </button>
         </form>
-        <p className="text-gray-400 text-sm mt-4 text-center">
+        <p className="text-gray-500 text-xs mt-4 text-center">
+          メールが届かない場合は迷惑メールフォルダに入っていないかご確認ください
+        </p>
+        <p className="text-gray-400 text-sm mt-2 text-center">
           すでにアカウントをお持ちの方は
           <a href="/login" className="text-purple-400 hover:underline ml-1">ログイン</a>
         </p>

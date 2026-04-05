@@ -3,7 +3,7 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-gray-950 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-2">プライバシーポリシー</h1>
-        <p className="text-gray-400 text-sm mb-10">最終更新日：2025年2月21日</p>
+        <p className="text-gray-400 text-sm mb-10">最終更新日：2026年4月5日</p>
 
         <div className="space-y-10 text-gray-300 leading-relaxed">
 
@@ -30,7 +30,13 @@ export default function PrivacyPage() {
             <h3 className="font-bold text-gray-200 mb-2">自動的に収集される情報</h3>
             <ul className="list-disc list-inside space-y-1 text-gray-400">
               <li>アクセスログ（IPアドレス・ブラウザ種別・アクセス日時）</li>
-              <li>Cookie および類似技術による情報（セッション管理に使用）</li>
+              <li>Cookie および localStorage による情報（セッション管理・ログイン状態の保持に使用）</li>
+            </ul>
+
+            <h3 className="font-bold text-gray-200 mb-2 mt-4">外部サービスを通じて取得される情報</h3>
+            <ul className="list-disc list-inside space-y-1 text-gray-400">
+              <li>YouTubeチャンネル情報（YouTube Data API v3 / Google LLCが提供）。ユーザーがURLを入力した場合のみ取得し、チャンネル情報の表示に使用します</li>
+              <li>アバター画像（Cloudinary, Inc.が提供する画像ホスティングサービスを使用）。アップロードされた画像はCloudinaryのサーバーに保存されます</li>
             </ul>
           </section>
 
@@ -71,15 +77,24 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">6. Cookieの使用</h2>
+            <h2 className="text-lg font-bold text-white mb-3">6. メール通知</h2>
             <p>
-              当サービスはセッション管理のためにCookieを使用します。
-              ブラウザの設定によりCookieを無効にすることができますが、その場合サービスの一部機能が利用できなくなる場合があります。
+              当サービスは、コラボ申請の受信・マッチング成立等のイベント発生時に、登録メールアドレスへ通知メールを送信します。
+              メール送信にはResend, Inc.が提供するメール配信サービスを使用しており、送信に必要な範囲でメールアドレスを同サービスに提供します。
+              詳細はResend社のプライバシーポリシーをご確認ください。
             </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">7. ポリシーの変更</h2>
+            <h2 className="text-lg font-bold text-white mb-3">7. Cookie・localStorageの使用</h2>
+            <p>
+              当サービスはセッション管理およびログイン状態の保持のためにCookieおよびlocalStorageを使用します。
+              ブラウザの設定によりこれらを無効にすることができますが、その場合サービスの一部機能（ログイン維持など）が利用できなくなる場合があります。
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-white mb-3">8. ポリシーの変更</h2>
             <p>
               本ポリシーは必要に応じて変更されることがあります。
               重要な変更がある場合はサービス上でお知らせします。
@@ -88,7 +103,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">8. お問い合わせ</h2>
+            <h2 className="text-lg font-bold text-white mb-3">9. お問い合わせ</h2>
             <p>
               個人情報の取り扱いに関するお問い合わせは、サービス内のお問い合わせフォームよりご連絡ください。
             </p>

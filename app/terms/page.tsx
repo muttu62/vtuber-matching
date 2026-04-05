@@ -3,7 +3,7 @@ export default function TermsPage() {
     <div className="min-h-screen bg-gray-950 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-white mb-2">利用規約</h1>
-        <p className="text-gray-400 text-sm mb-10">最終更新日：2025年2月21日</p>
+        <p className="text-gray-400 text-sm mb-10">最終更新日：2026年4月5日</p>
 
         <div className="space-y-10 text-gray-300 leading-relaxed">
 
@@ -60,16 +60,40 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">第6条（マッチング機能）</h2>
-            <p>
+            <h2 className="text-lg font-bold text-white mb-3">第6条（マッチング機能・連絡先の取り扱い）</h2>
+            <p className="mb-2">
               当サービスのマッチング機能はユーザー間の出会いを仲介するものであり、
               コラボの成立・内容・結果について当サービスは一切の責任を負いません。
               ユーザー間のトラブルは当事者間で解決するものとし、当サービスへの責任転嫁はできません。
             </p>
+            <p>
+              マッチング成立後に交換される連絡先（SNSアカウント・メールアドレス等）は、コラボ・制作依頼等の本来の目的にのみ使用するものとします。
+              勧誘・営業・ハラスメント等の目的外利用は固く禁止します。
+            </p>
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">第7条（サービスの変更・停止）</h2>
+            <h2 className="text-lg font-bold text-white mb-3">第6条の2（みんなと共有への投稿ルール）</h2>
+            <p className="mb-2">「みんなと共有」機能に投稿する際は、以下のルールを遵守してください。</p>
+            <ul className="list-disc list-inside space-y-1 text-gray-400">
+              <li>第三者が著作権を有するコンテンツ（文章・画像・動画等）を無断で転載・引用しないこと</li>
+              <li>虚偽の情報・誤解を招く内容を投稿しないこと</li>
+              <li>特定のユーザーや団体を誹謗中傷する内容を投稿しないこと</li>
+              <li>スパムや宣伝・勧誘を目的とした投稿を行わないこと</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-white mb-3">第6条の3（アカウント管理）</h2>
+            <p>
+              ユーザーは1人につき1つのアカウントのみ作成・保有できます。
+              アカウントの第三者への譲渡・貸与・売買は禁止します。
+              アカウントの管理責任はユーザー本人にあり、不正利用が発覚した場合は当サービスの判断でアカウントを停止・削除することがあります。
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-bold text-white mb-3">第8条（サービスの変更・停止）</h2>
             <p>
               当サービスは、ユーザーへの事前通知なく、サービスの内容変更・機能追加・一時停止・終了を行う場合があります。
               これによりユーザーに生じた損害について、当サービスは責任を負いません。
@@ -77,7 +101,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">第8条（免責事項）</h2>
+            <h2 className="text-lg font-bold text-white mb-3">第9条（免責事項）</h2>
             <p>
               当サービスは、サービスの完全性・正確性・安全性を保証しません。
               当サービスの利用によって生じた直接・間接的な損害について、当サービスは法令上の責任を負う場合を除き一切責任を負いません。
@@ -85,7 +109,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">第9条（規約の変更）</h2>
+            <h2 className="text-lg font-bold text-white mb-3">第10条（規約の変更）</h2>
             <p>
               当サービスは、必要に応じて本規約を変更することがあります。
               変更後の規約はサービス上に掲示した時点で効力を生じるものとし、
@@ -94,7 +118,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-bold text-white mb-3">第10条（準拠法・管轄）</h2>
+            <h2 className="text-lg font-bold text-white mb-3">第11条（準拠法・管轄）</h2>
             <p>
               本規約は日本法に準拠し、本規約に関する紛争は東京地方裁判所を第一審の専属的合意管轄裁判所とします。
             </p>

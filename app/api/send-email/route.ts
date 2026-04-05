@@ -8,18 +8,25 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
 
 const LOGO_URL = "https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp";
 
-// Firestore REST API でユーザー情報をサーバー側から取得（クライアントにメールを渡さない）
-async function getFirestoreUser(uid: string): Promise<{ email: string; name: string }> {
+// Firestore REST API でユーザー情報をサーバー側から取得（認証トークン付き）
+async function getFirestoreUser(uid: string, authToken: string): Promise<{ email: string; name: string }> {
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  const res = await fetch(
-    `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}`
-  );
-  if (!res.ok) return { email: "", name: "ユーザー" };
+  const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/users/${uid}`;
+  console.log(`[send-email] getFirestoreUser uid=${uid} url=${url}`);
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  console.log(`[send-email] Firestore response status=${res.status} for uid=${uid}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error(`[send-email] Firestore read failed: ${errText}`);
+    return { email: "", name: "ユーザー" };
+  }
   const data = await res.json();
-  return {
-    email: data.fields?.email?.stringValue ?? "",
-    name: data.fields?.name?.stringValue ?? "ユーザー",
-  };
+  const email = data.fields?.email?.stringValue ?? "";
+  const name = data.fields?.name?.stringValue ?? "ユーザー";
+  console.log(`[send-email] Firestore user fetched: name=${name} hasEmail=${!!email}`);
+  return { email, name };
 }
 
 function buildEmail(body: string, buttonText: string, buttonHref: string): string {
@@ -84,20 +91,29 @@ type MatchAcceptedPayload = {
 type EmailPayload = MatchRequestPayload | MatchAcceptedPayload;
 
 export async function POST(req: NextRequest) {
+  console.log("[send-email] POST called");
+  console.log("[send-email] RESEND_API_KEY set:", !!process.env.RESEND_API_KEY);
+
+  const token = req.cookies.get("session")?.value ?? null;
   const uid = await verifySession(req);
-  if (!uid) {
+  if (!uid || !token) {
+    console.error("[send-email] 認証失敗 uid=", uid, "hasToken=", !!token);
     return NextResponse.json({ error: "認証が必要です" }, { status: 401 });
   }
+  console.log("[send-email] 認証OK uid=", uid);
 
   try {
     const body: EmailPayload = await req.json();
+    console.log("[send-email] body.type=", body.type);
 
     if (body.type === "match_request") {
-      const receiver = await getFirestoreUser(body.receiverId);
+      const receiver = await getFirestoreUser(body.receiverId, token);
       if (!receiver.email) {
+        console.error("[send-email] receiver email not found for uid=", body.receiverId);
         return NextResponse.json({ error: "送信先が見つかりません" }, { status: 400 });
       }
-      await resend.emails.send({
+      console.log("[send-email] sending match_request to", receiver.email);
+      const { data, error } = await resend.emails.send({
         from: FROM,
         to: receiver.email,
         subject: `【Vクリマッチング】${body.senderName} さんからコラボ申請が届きました🎉`,
@@ -107,15 +123,20 @@ export async function POST(req: NextRequest) {
           `${BASE_URL}/matches`
         ),
       });
+      console.log("[send-email] resend result:", JSON.stringify({ data, error }));
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
 
     } else if (body.type === "match_accepted") {
       const [sender, receiver] = await Promise.all([
-        getFirestoreUser(body.senderId),
-        getFirestoreUser(body.receiverId),
+        getFirestoreUser(body.senderId, token),
+        getFirestoreUser(body.receiverId, token),
       ]);
       // 申請者（sender）へ
       if (sender.email) {
-        await resend.emails.send({
+        console.log("[send-email] sending match_accepted to sender", sender.email);
+        const { data, error } = await resend.emails.send({
           from: FROM,
           to: sender.email,
           subject: `【Vクリマッチング】マッチングが成立しました🎊`,
@@ -125,10 +146,14 @@ export async function POST(req: NextRequest) {
             `${BASE_URL}/matches`
           ),
         });
+        console.log("[send-email] sender result:", JSON.stringify({ data, error }));
+      } else {
+        console.warn("[send-email] sender email not found uid=", body.senderId);
       }
       // 承認者（receiver）へ
       if (receiver.email) {
-        await resend.emails.send({
+        console.log("[send-email] sending match_accepted to receiver", receiver.email);
+        const { data, error } = await resend.emails.send({
           from: FROM,
           to: receiver.email,
           subject: `【Vクリマッチング】マッチングが成立しました🎊`,
@@ -138,6 +163,9 @@ export async function POST(req: NextRequest) {
             `${BASE_URL}/matches`
           ),
         });
+        console.log("[send-email] receiver result:", JSON.stringify({ data, error }));
+      } else {
+        console.warn("[send-email] receiver email not found uid=", body.receiverId);
       }
     } else {
       return NextResponse.json({ error: "不明なタイプ" }, { status: 400 });
@@ -145,7 +173,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true });
   } catch (error: any) {
-    console.error("[/api/send-email] error:", error);
+    console.error("[/api/send-email] exception:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

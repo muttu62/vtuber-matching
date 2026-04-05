@@ -58,6 +58,13 @@ export default function DiagnosisPage() {
             </div>
           </div>
         </div>
+
+        {/* GIF・テキスト */}
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <img src="/pochipochi_NewPiskel3.gif" className="mx-auto w-32 h-auto" alt="" />
+          <p className="text-sm text-gray-400 text-center">ぽちぽちおして　しんだんする</p>
+        </div>
+
       </div>
     </div>
   );

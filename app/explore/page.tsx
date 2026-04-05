@@ -42,6 +42,7 @@ function ExploreContent() {
   const [showPickup, setShowPickup] = useState(false);
   const [showPersonalityPromo, setShowPersonalityPromo] = useState(false);
   const tourStartedRef = useRef(false);
+  const [onboardingDone, setOnboardingDone] = useState(false);
 
   // URLパラメータ tab=compatibility で相性タブを自動選択
   useEffect(() => {
@@ -69,7 +70,10 @@ function ExploreContent() {
   // driver.js オンボーディングツアー
   useEffect(() => {
     if (loading || !user || tourStartedRef.current) return;
-    if (localStorage.getItem("onboarding_completed")) return;
+    if (localStorage.getItem("onboarding_completed")) {
+      setOnboardingDone(true);
+      return;
+    }
     tourStartedRef.current = true;
 
     const timer = setTimeout(() => {
@@ -89,6 +93,7 @@ function ExploreContent() {
         doneBtnText: "はじめる",
         onDestroyed: () => {
           localStorage.setItem("onboarding_completed", "true");
+          setOnboardingDone(true);
         },
         steps: [
           {
@@ -148,20 +153,23 @@ function ExploreContent() {
     return () => clearTimeout(timer);
   }, [user, loading]);
 
-  // 1日1回ポップアップ表示（ログイン済み・未診断・全データ読込後）
+  // 1日1回ポップアップ表示（ログイン済み・未診断・全データ読込後・オンボーディング完了後）
   useEffect(() => {
     if (!user || loading || myPersonalityType === undefined || myPersonalityType !== null) return;
+    if (!onboardingDone) return;
     const today = new Date().toISOString().slice(0, 10);
     const shown = localStorage.getItem("pickup_shown_date");
     if (shown !== today) {
       localStorage.setItem("pickup_shown_date", today);
       setShowPickup(true);
     }
-  }, [user, loading, myPersonalityType]);
+  }, [user, loading, myPersonalityType, onboardingDone]);
 
   // 性格診断をしていないユーザーへのプロモポップアップ
   useEffect(() => {
     if (myPersonalityType === undefined) return; // まだ読み込み中
+    // ログイン済みはオンボーディング完了後に表示
+    if (user && !onboardingDone) return;
     const today = new Date().toISOString().slice(0, 10);
     const dismissed = localStorage.getItem("personality_promo_dismissed");
     if (dismissed === today) return;
@@ -169,7 +177,7 @@ function ExploreContent() {
     if (!myPersonalityType) {
       setShowPersonalityPromo(true);
     }
-  }, [myPersonalityType]);
+  }, [myPersonalityType, onboardingDone, user]);
 
   // isPublic=false のユーザーを除外、creator は acceptsRequests=true のみ
   const visibleUsers = users.filter(

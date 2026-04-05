@@ -1,6 +1,43 @@
+"use client";
 import Link from "next/link";
+import { useAuth } from "../../lib/AuthContext";
 
 export default function DiagnosisPage() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <p className="text-gray-400">読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
+        <div className="text-center">
+          <div className="text-5xl mb-4">🎭</div>
+          <h1 className="text-xl font-bold text-white mb-3">ログインが必要です</h1>
+          <p className="text-gray-400 text-sm mb-6">
+            相性診断を受けるにはログインしてください
+          </p>
+          <div className="flex flex-col gap-3 items-center">
+            <Link
+              href="/login"
+              className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-3 rounded-xl transition-colors"
+            >
+              ログインする
+            </Link>
+            <Link href="/signup" className="text-gray-400 hover:text-white text-sm transition-colors">
+              アカウントを作成 →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-950 py-12 px-4">
       <div className="max-w-2xl mx-auto">

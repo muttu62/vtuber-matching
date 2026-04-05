@@ -26,12 +26,17 @@ body {
 }
 
 /* ===== driver.js カスタムテーマ ===== */
+/* オーバーレイを薄くして要素が見えやすくする */
+#driver-page-overlay,
+.driver-overlay {
+  opacity: 0.55 !important;
+}
 .driver-popover {
-  background-color: #1a1a22 !important;
+  background-color: #2a2a42 !important;
   color: #e2e2ee !important;
-  border: 1px solid #2e2e3e !important;
+  border: 1.5px solid #7c6aff !important;
   border-radius: 14px !important;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6) !important;
+  box-shadow: 0 8px 48px rgba(124, 106, 255, 0.25), 0 4px 24px rgba(0,0,0,0.7) !important;
   max-width: 340px !important;
   padding: 20px !important;
 }

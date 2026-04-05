@@ -64,6 +64,7 @@ body {
   border-radius: 8px !important;
   padding: 6px 14px !important;
   font-weight: 600 !important;
+  text-shadow: none !important;
 }
 .driver-popover-next-btn:hover,
 .driver-popover-done-btn:hover {
@@ -75,9 +76,14 @@ body {
   border: 1px solid #3e3e50 !important;
   border-radius: 8px !important;
   padding: 6px 14px !important;
+  text-shadow: none !important;
 }
 .driver-popover-prev-btn:hover {
   background-color: #3e3e50 !important;
+}
+/* footer内の全ボタンのtext-shadowを無効化 */
+.driver-popover-footer button {
+  text-shadow: none !important;
 }
 .driver-popover-close-btn {
   color: #6b7280 !important;

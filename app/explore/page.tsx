@@ -428,60 +428,65 @@ function UserGrid({
           <Link
             key={u.uid}
             href={`/profile/${u.uid}`}
-            className="bg-gray-900 rounded-2xl p-6 flex flex-col gap-2 hover:bg-gray-800 transition-colors relative"
+            className="bg-gray-900 rounded-2xl p-4 flex flex-col gap-2 hover:bg-gray-800 transition-colors relative"
           >
             {showCompatible && u.personalityType && (
-              <span className="absolute top-4 right-4 text-xs bg-purple-600/80 text-white px-2 py-0.5 rounded-full">
+              <span className="absolute top-3 right-3 text-xs bg-purple-600/80 text-white px-2 py-0.5 rounded-full">
                 {u.personalityType}
               </span>
             )}
             {!showCompatible && shared > 0 && (
-              <span className="absolute top-4 right-4 text-xs bg-purple-600/80 text-white px-2 py-0.5 rounded-full">
+              <span className="absolute top-3 right-3 text-xs bg-purple-600/80 text-white px-2 py-0.5 rounded-full">
                 共通{shared}タグ
               </span>
             )}
-            {u.avatarUrl ? (
-              <img
-                src={u.avatarUrl}
-                alt={u.name}
-                className="w-16 h-16 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center text-2xl text-gray-400">
-                ?
-              </div>
-            )}
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-white font-bold text-lg">{u.name || "名前未設定"}</p>
-              {u.userType && (
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                  u.userType === "vtuber"
-                    ? "bg-blue-900/50 text-blue-300"
-                    : u.userType === "vtuber_creator"
-                    ? "bg-orange-900/50 text-orange-300"
-                    : "bg-green-900/50 text-green-300"
-                }`}>
-                  {USER_TYPE_LABEL[u.userType]}
-                </span>
+            {/* アイコン左 / 名前・タグ右の横並びレイアウト */}
+            <div className="flex items-start gap-3">
+              {u.avatarUrl ? (
+                <img
+                  src={u.avatarUrl}
+                  alt={u.name}
+                  className="w-12 h-12 rounded-full object-cover shrink-0"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center text-xl text-gray-400 shrink-0">
+                  ?
+                </div>
               )}
+              <div className="flex-1 min-w-0 pr-8">
+                <div className="flex flex-row flex-wrap items-center gap-1.5">
+                  <p className="text-white font-bold text-base">{u.name || "名前未設定"}</p>
+                  {u.userType && (
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      u.userType === "vtuber"
+                        ? "bg-blue-900/50 text-blue-300"
+                        : u.userType === "vtuber_creator"
+                        ? "bg-orange-900/50 text-orange-300"
+                        : "bg-green-900/50 text-green-300"
+                    }`}>
+                      {USER_TYPE_LABEL[u.userType]}
+                    </span>
+                  )}
+                  {toTagArray(u.genre).map((g) => (
+                    <span key={g} className="text-xs text-purple-300 bg-purple-900/40 px-2 py-0.5 rounded-full">
+                      {g}
+                    </span>
+                  ))}
+                  {toTagArray(u.genreCreator).map((g) => (
+                    <span key={g} className="text-xs text-green-300 bg-green-900/40 px-2 py-0.5 rounded-full">
+                      {g}
+                    </span>
+                  ))}
+                </div>
+                {toTagArray(u.activityTime).length > 0 && (
+                  <p className="text-gray-400 text-xs mt-1">
+                    活動時間: {toTagArray(u.activityTime).join(" / ")}
+                  </p>
+                )}
+              </div>
             </div>
-            {toTagArray(u.genre).map((g) => (
-              <span key={g} className="text-xs text-purple-300 bg-purple-900/40 px-2 py-1 rounded-full w-fit">
-                {g}
-              </span>
-            ))}
-            {toTagArray(u.genreCreator).map((g) => (
-              <span key={g} className="text-xs text-green-300 bg-green-900/40 px-2 py-1 rounded-full w-fit">
-                {g}
-              </span>
-            ))}
-            {toTagArray(u.activityTime).length > 0 && (
-              <p className="text-gray-400 text-sm">
-                活動時間: {toTagArray(u.activityTime).join(" / ")}
-              </p>
-            )}
             {u.description && (
-              <p className="text-gray-300 text-sm line-clamp-3">{u.description}</p>
+              <p className="text-gray-300 text-sm line-clamp-2">{u.description}</p>
             )}
           </Link>
         );

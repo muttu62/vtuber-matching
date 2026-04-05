@@ -235,6 +235,16 @@ export default function MyPage() {
 
         </div>
 
+        {/* Xで募集ツイートする */}
+        <a
+          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`仲間を募集中🎉 Vクリで仲間を探しています！気になる方はこちらからフレンド申請👇\nhttps://v-kuri.com/profile/${user?.uid}\nVtuberのためのマッチングサービス【#Vクリマッチング】\n\n#コラボ募集中 #Vtuberのおともだち大募集`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg transition-colors text-center mb-3"
+        >
+          𝕏で募集ツイートする
+        </a>
+
         {/* プロフィールを編集 */}
         <button
           onClick={() => router.push("/profile/edit")}

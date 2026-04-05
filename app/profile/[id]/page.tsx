@@ -166,8 +166,8 @@ export default function UserProfilePage() {
 
           {/* 活動時間帯 */}
           {activityTimeTags.length > 0 && (
-            <div className="mb-5">
-              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">活動時間帯</h2>
+            <div className="border-t border-gray-800 py-4">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-2">活動時間帯</h2>
               <div className="flex flex-wrap gap-1">
                 {activityTimeTags.map((t) => (
                   <span key={t} className="text-xs text-gray-300 bg-gray-800 px-2 py-0.5 rounded-full">
@@ -180,15 +180,15 @@ export default function UserProfilePage() {
 
           {/* 自己紹介 */}
           {profile.description && (
-            <div className="mb-5">
-              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">自己紹介</h2>
+            <div className="border-t border-gray-800 py-4">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-2">自己紹介</h2>
               <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{profile.description}</p>
             </div>
           )}
 
           {/* コラボスタイルバッジ */}
           {profile.collaboStyle && (
-            <div className="mb-5">
+            <div className="border-t border-gray-800 py-4">
               <span className="text-xs bg-purple-900/40 text-purple-300 px-3 py-1.5 rounded-full">
                 コラボスタイル：{profile.collaboStyle}
               </span>
@@ -197,24 +197,24 @@ export default function UserProfilePage() {
 
           {/* 一緒にやりたいこと */}
           {profile.collaboWant && (
-            <div className="mb-5">
-              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">一緒にやりたいこと</h2>
+            <div className="border-t border-gray-800 py-4">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-2">一緒にやりたいこと</h2>
               <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{profile.collaboWant}</p>
             </div>
           )}
 
           {/* 活動目標 */}
           {profile.activityGoal && (
-            <div className="mb-5">
-              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">活動目標</h2>
+            <div className="border-t border-gray-800 py-4">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-2">活動目標</h2>
               <p className="text-gray-200 leading-relaxed whitespace-pre-wrap">{profile.activityGoal}</p>
             </div>
           )}
 
           {/* 関連リンク */}
           {profile.snsLinks && (
-            <div className="mb-6">
-              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">関連リンク</h2>
+            <div className="border-t border-gray-800 py-4">
+              <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-2">関連リンク</h2>
               {profile.snsLinks.startsWith("http") ? (
                 <a
                   href={profile.snsLinks}
@@ -232,7 +232,7 @@ export default function UserProfilePage() {
 
           {/* 最新の動画 */}
           {profile.youtubeVideos && profile.youtubeVideos.length > 0 && (
-            <div className="mb-6">
+            <div className="border-t border-gray-800 py-4">
               <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-3">最新の動画</h2>
               <div className="grid grid-cols-3 gap-2">
                 {profile.youtubeVideos.map((video) => (
@@ -267,7 +267,7 @@ export default function UserProfilePage() {
           {/* 自分のプロフィール：シェアボタン */}
           {isOwnProfile && (
             <a
-              href={`https://twitter.com/intent/tweet?text=%E3%80%90%E3%82%B3%E3%83%A9%E3%83%9C%E5%8B%9F%E9%9B%86%E4%B8%AD%E3%80%91V%E3%82%AF%E3%83%AA%E3%81%A7%E3%82%B3%E3%83%A9%E3%83%9C%E7%9B%B8%E6%89%8B%E3%82%92%E6%8E%A2%E3%81%97%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99%EF%BC%81%E6%B0%97%E3%81%AB%E3%81%AA%E3%82%8B%E6%96%B9%E3%81%AF%E3%81%93%E3%81%A1%E3%82%89%E3%81%8B%E3%82%89%E3%81%A9%E3%81%86%E3%81%9E%F0%9F%91%87%0Ahttps%3A%2F%2Fv-kuri.com%2Fprofile%2F${id}%0A%23Vtuber%E5%8B%9F%E9%9B%86%20%23%E3%82%B3%E3%83%A9%E3%83%9C%E5%8B%9F%E9%9B%86%20%23%E5%80%8B%E4%BA%BAvtuber`}
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`仲間を募集中🎉 Vクリで仲間を探しています！気になる方はこちらからフレンド申請👇\nhttps://v-kuri.com/profile/${id}\nVtuberのためのマッチングサービス【#Vクリマッチング】\n\n#コラボ募集中 #Vtuberのおともだち大募集`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg transition-colors text-center"

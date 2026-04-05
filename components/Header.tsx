@@ -5,12 +5,14 @@ import { useRef, useState, useEffect } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { useAuth } from "../lib/AuthContext";
 import { db } from "../lib/firebase";
+import { getUserProfile } from "../lib/firestore";
 
 export default function Header() {
   const pathname = usePathname();
   const { user } = useAuth();
   const [showPopup, setShowPopup] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [noContact, setNoContact] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
 
@@ -33,6 +35,14 @@ export default function Header() {
   // ログイン後はポップアップを自動で閉じる
   useEffect(() => {
     if (user) setShowPopup(false);
+  }, [user]);
+
+  // 非公開の連絡先が未設定かチェック
+  useEffect(() => {
+    if (!user) { setNoContact(false); return; }
+    getUserProfile(user.uid).then((p) => {
+      setNoContact(!(p?.contactPlatform || p?.contactValue || p?.privateContact));
+    });
   }, [user]);
 
   // ログイン済みのとき pending 件数をリアルタイム取得
@@ -58,8 +68,8 @@ export default function Header() {
   ];
 
   const authLinks = [
-    { href: "/matches", label: "申請", badge: pendingCount, tour: "" },
-    { href: "/mypage", label: "マイページ", badge: 0, tour: "mypage-nav" },
+    { href: "/matches", label: "申請", badge: pendingCount, alert: false, tour: "" },
+    { href: "/mypage", label: "マイページ", badge: 0, alert: noContact, tour: "mypage-nav" },
   ];
 
   return (
@@ -73,7 +83,7 @@ export default function Header() {
           </Link>
           {/* 1行目: 申請・マイページ（右） */}
           <nav ref={navRef} className="flex items-center gap-1">
-            {authLinks.map(({ href, label, badge, tour }) =>
+            {authLinks.map(({ href, label, badge, alert, tour }) =>
               user ? (
                 <Link
                   key={href}
@@ -89,6 +99,11 @@ export default function Header() {
                   {badge > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
                       {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
+                  {alert && badge === 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-[18px] h-[18px] flex items-center justify-center leading-none">
+                      !
                     </span>
                   )}
                 </Link>
@@ -162,7 +177,7 @@ export default function Header() {
                 {label}
               </Link>
             ))}
-            {authLinks.map(({ href, label, badge, tour }) =>
+            {authLinks.map(({ href, label, badge, alert, tour }) =>
               user ? (
                 <Link
                   key={href}
@@ -178,6 +193,11 @@ export default function Header() {
                   {badge > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 leading-none">
                       {badge > 99 ? "99+" : badge}
+                    </span>
+                  )}
+                  {alert && badge === 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-[18px] h-[18px] flex items-center justify-center leading-none">
+                      !
                     </span>
                   )}
                 </Link>

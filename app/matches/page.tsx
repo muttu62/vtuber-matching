@@ -105,12 +105,15 @@ export default function MatchesPage() {
       <div className="max-w-2xl mx-auto space-y-10">
         {/* 受け取った申請 */}
         <section>
-          <h2 className="text-xl font-bold text-white mb-4">
+          <h2 className="text-xl font-bold text-white mb-3">
             受け取ったフレンド申請
             {received.length > 0 && (
               <span className="ml-2 text-sm text-gray-400 font-normal">（{received.length}件）</span>
             )}
           </h2>
+          <p className="text-gray-500 text-xs mb-4">
+            承認せず確認済みにした場合は、相手に通知はいきません
+          </p>
 
           {received.length === 0 ? (
             <p className="text-gray-500 text-sm">まだ申請はありません</p>

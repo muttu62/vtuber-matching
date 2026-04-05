@@ -160,6 +160,16 @@ export default function MyPage() {
       <div className="max-w-lg mx-auto">
         <h1 className="text-2xl font-bold text-white mb-6">マイページ</h1>
 
+        {/* 非公開の連絡先が未設定の場合の警告 */}
+        {profile && !(profile.contactPlatform || profile.contactValue || profile.privateContact) && (
+          <div className="bg-red-900/30 border border-red-700 rounded-xl px-4 py-3 mb-4 flex items-start gap-2">
+            <span className="text-red-400 font-bold mt-0.5 shrink-0">!</span>
+            <p className="text-red-400 text-sm leading-relaxed">
+              非公開の連絡先を設定していないとフレンド申請をして承認されても相手と連絡を取ることができません
+            </p>
+          </div>
+        )}
+
         <div className="bg-gray-900 rounded-2xl p-8 mb-4">
           {/* アバター + 名前 */}
           <div className="flex items-center gap-4 mb-6">

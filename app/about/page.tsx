@@ -29,25 +29,32 @@ export default function AboutPage() {
         </div>
 
         {/* 特徴カード */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-gray-900 rounded-2xl p-6 text-center">
-            <div className="text-3xl mb-3">🔍</div>
-            <h3 className="text-white font-bold mb-2">探す＆提案</h3>
-            <p className="text-gray-400 text-sm">
-              自分で仲間を探したり、自動であなたと相性の良い相手が提案されます
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <div className="bg-gray-900 rounded-2xl p-5 text-center">
+            <div className="text-3xl mb-3">✨</div>
+            <h3 className="text-white font-bold mb-2 text-sm sm:text-base">提案</h3>
+            <p className="text-gray-400 text-xs sm:text-sm">
+              相性診断を行うと自動であなたと相性の良い相手が提案されます
             </p>
           </div>
-          <div className="bg-gray-900 rounded-2xl p-6 text-center">
+          <div className="bg-gray-900 rounded-2xl p-5 text-center">
+            <div className="text-3xl mb-3">🔍</div>
+            <h3 className="text-white font-bold mb-2 text-sm sm:text-base">探す</h3>
+            <p className="text-gray-400 text-xs sm:text-sm">
+              自分で気になる相手を探すこともできます
+            </p>
+          </div>
+          <div className="bg-gray-900 rounded-2xl p-5 text-center">
             <div className="text-3xl mb-3">✉️</div>
-            <h3 className="text-white font-bold mb-2">申請する</h3>
-            <p className="text-gray-400 text-sm">
+            <h3 className="text-white font-bold mb-2 text-sm sm:text-base">申請する</h3>
+            <p className="text-gray-400 text-xs sm:text-sm">
               気になった相手に、気軽にフレンド申請を送れます
             </p>
           </div>
-          <div className="bg-gray-900 rounded-2xl p-6 text-center">
+          <div className="bg-gray-900 rounded-2xl p-5 text-center">
             <div className="text-3xl mb-3">🎉</div>
-            <h3 className="text-white font-bold mb-2">マッチング</h3>
-            <p className="text-gray-400 text-sm">
+            <h3 className="text-white font-bold mb-2 text-sm sm:text-base">マッチング</h3>
+            <p className="text-gray-400 text-xs sm:text-sm">
               承認されたらマッチング成立！メール通知でお知らせし、非公開の連絡先がお互いに確認できます
             </p>
           </div>

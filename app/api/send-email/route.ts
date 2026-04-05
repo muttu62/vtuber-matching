@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Vクリマッチング <noreply@v-kuri.com>";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
 
-const LOGO_URL = "https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp";
+const LOGO_URL = "https://v-kuri.com/logo.webp";
 
 // Firestore REST API でユーザー情報をサーバー側から取得（認証トークン付き）
 async function getFirestoreUser(uid: string, authToken: string): Promise<{ email: string; name: string }> {

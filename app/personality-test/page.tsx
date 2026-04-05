@@ -153,165 +153,125 @@ export default function PersonalityTestPage() {
   // - 新しい診断を完了していない (step !== 9)
   const showExisting = existingType !== undefined && existingType !== null && !showRetry && step !== 9;
 
-  // ---- 既存結果表示 ----
-  if (showExisting) {
-    const shareText = encodeURIComponent(
-      `私は【${existingType.emoji}${existingType.name}】でした！🎉 Vクリマッチングで相性の良いVTuberを探そう👇 https://v-kuri.com/personality-test #Vクリマッチング #VTuber`
-    );
-    return (
-      <div className="min-h-screen bg-gray-950 py-12 px-4">
-        <div className="max-w-lg mx-auto">
-          <div className="bg-gray-900 rounded-2xl p-8 text-center">
-            <p className="text-gray-400 text-xs mb-4">あなたの診断結果</p>
-            <div className="text-7xl mb-4">{existingType.emoji}</div>
-            <p className="text-gray-400 text-sm mb-1">あなたのタイプは</p>
-            <h1 className="text-3xl font-bold text-white mb-3">{existingType.name}</h1>
-            <p className="text-gray-300 text-sm leading-relaxed mb-6">{existingType.desc}</p>
-
-            <div className="bg-gray-800 rounded-xl p-4 mb-6">
-              <p className="text-gray-400 text-xs mb-3">相性の良いタイプ</p>
-              <div className="flex justify-center gap-2 flex-wrap">
-                {existingType.compatible.map((c) => (
-                  <span key={c} className="text-sm bg-purple-900/40 text-purple-300 px-3 py-1.5 rounded-full">
-                    {c}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <a
-                href={`https://twitter.com/intent/tweet?text=${shareText}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg transition-colors text-center"
-              >
-                𝕏でシェアする
-              </a>
-              <button
-                onClick={() => router.push("/explore")}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
-              >
-                相性の良い人を探す
-              </button>
-              <button
-                onClick={startRetry}
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-colors"
-              >
-                🔄 やり直す
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ---- 新しい診断の結果画面 ----
-  if (step === 9 && result) {
-    const shareText = encodeURIComponent(
-      `私は【${result.emoji}${result.name}】でした！🎉 Vクリマッチングで相性の良いVTuberを探そう👇 https://v-kuri.com/personality-test #Vクリマッチング #VTuber`
-    );
-    return (
-      <div className="min-h-screen bg-gray-950 py-12 px-4">
-        <div className="max-w-lg mx-auto">
-          <div className="bg-gray-900 rounded-2xl p-8 text-center">
-            <div className="text-7xl mb-4">{result.emoji}</div>
-            <p className="text-gray-400 text-sm mb-1">あなたのタイプは</p>
-            <h1 className="text-3xl font-bold text-white mb-3">{result.name}</h1>
-            <p className="text-gray-300 text-sm leading-relaxed mb-6">{result.desc}</p>
-
-            <div className="bg-gray-800 rounded-xl p-4 mb-6">
-              <p className="text-gray-400 text-xs mb-3">相性の良いタイプ</p>
-              <div className="flex justify-center gap-2 flex-wrap">
-                {result.compatible.map((c) => (
-                  <span key={c} className="text-sm bg-purple-900/40 text-purple-300 px-3 py-1.5 rounded-full">
-                    {c}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <a
-                href={`https://twitter.com/intent/tweet?text=${shareText}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg transition-colors text-center"
-              >
-                𝕏でシェアする
-              </a>
-              <button
-                onClick={() => router.push("/explore?tab=compatibility")}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
-              >
-                相性の良い相手を探す
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ---- 質問画面（ロード中 or 未診断 or やり直し中） ----
-  // existingType が undefined のうちはローディング中のため表示しない
-  if (existingType === undefined) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <p className="text-gray-400">読み込み中...</p>
-      </div>
-    );
-  }
+  const existingShareText = showExisting ? encodeURIComponent(
+    `私は【${existingType!.emoji}${existingType!.name}】でした！🎉 Vクリマッチングで相性の良いVTuberを探そう👇 https://v-kuri.com/personality-test #Vクリマッチング #VTuber`
+  ) : "";
+  const newShareText = (step === 9 && result) ? encodeURIComponent(
+    `私は【${result.emoji}${result.name}】でした！🎉 Vクリマッチングで相性の良いVTuberを探そう👇 https://v-kuri.com/personality-test #Vクリマッチング #VTuber`
+  ) : "";
 
   return (
     <div className="min-h-screen bg-gray-950 py-12 px-4">
       <div className="max-w-lg mx-auto">
-        <h1 className="text-xl font-bold text-white mb-1 text-center">VTuber性格診断</h1>
-        <p className="text-gray-400 text-sm text-center mb-6">あなたのVTuberタイプを診断します</p>
 
-        {/* 進行バー */}
-        <div className="mb-6">
-          <div className="flex justify-between text-xs text-gray-500 mb-2">
-            <span>Q{step + 1} / 9</span>
-            <span>{Math.round((step / 9) * 100)}%</span>
-          </div>
-          <div className="w-full bg-gray-800 rounded-full h-2">
-            <div
-              className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(step / 9) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        <div className="bg-gray-900 rounded-2xl p-8">
-          <p className="text-white text-lg font-medium leading-relaxed mb-8 text-center min-h-[4rem] flex items-center justify-center">
-            {QUESTIONS[step]}
-          </p>
-          <div className="flex flex-col gap-3">
-            {OPTIONS.map((opt) => (
-              <button
-                key={opt.label}
-                onClick={() => handleAnswer(opt.score)}
-                className="w-full py-4 px-6 rounded-xl border-2 border-gray-700 hover:border-purple-500 hover:bg-purple-600/10 text-gray-200 font-medium transition-all text-sm"
-              >
-                {opt.label}
+        {/* ---- 既存結果表示 ---- */}
+        {showExisting && (
+          <div className="bg-gray-900 rounded-2xl p-8 text-center mb-6">
+            <p className="text-gray-400 text-xs mb-4">あなたの診断結果</p>
+            <div className="text-7xl mb-4">{existingType!.emoji}</div>
+            <p className="text-gray-400 text-sm mb-1">あなたのタイプは</p>
+            <h1 className="text-3xl font-bold text-white mb-3">{existingType!.name}</h1>
+            <p className="text-gray-300 text-sm leading-relaxed mb-6">{existingType!.desc}</p>
+            <div className="bg-gray-800 rounded-xl p-4 mb-6">
+              <p className="text-gray-400 text-xs mb-3">相性の良いタイプ</p>
+              <div className="flex justify-center gap-2 flex-wrap">
+                {existingType!.compatible.map((c) => (
+                  <span key={c} className="text-sm bg-purple-900/40 text-purple-300 px-3 py-1.5 rounded-full">{c}</span>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <a href={`https://twitter.com/intent/tweet?text=${existingShareText}`} target="_blank" rel="noopener noreferrer"
+                className="block w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg transition-colors text-center">
+                𝕏でシェアする
+              </a>
+              <button onClick={() => router.push("/explore")}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors">
+                相性の良い人を探す
               </button>
-            ))}
+              <button onClick={startRetry}
+                className="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-lg transition-colors">
+                🔄 やり直す
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
-        <button
-          onClick={() => router.push("/explore")}
-          className="mt-4 w-full text-gray-500 hover:text-gray-400 text-sm py-2 transition-colors"
-        >
-          スキップしてコラボ相手を探す →
-        </button>
+        {/* ---- 新しい診断の結果画面 ---- */}
+        {!showExisting && step === 9 && result && (
+          <div className="bg-gray-900 rounded-2xl p-8 text-center mb-6">
+            <div className="text-7xl mb-4">{result.emoji}</div>
+            <p className="text-gray-400 text-sm mb-1">あなたのタイプは</p>
+            <h1 className="text-3xl font-bold text-white mb-3">{result.name}</h1>
+            <p className="text-gray-300 text-sm leading-relaxed mb-6">{result.desc}</p>
+            <div className="bg-gray-800 rounded-xl p-4 mb-6">
+              <p className="text-gray-400 text-xs mb-3">相性の良いタイプ</p>
+              <div className="flex justify-center gap-2 flex-wrap">
+                {result.compatible.map((c) => (
+                  <span key={c} className="text-sm bg-purple-900/40 text-purple-300 px-3 py-1.5 rounded-full">{c}</span>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <a href={`https://twitter.com/intent/tweet?text=${newShareText}`} target="_blank" rel="noopener noreferrer"
+                className="block w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 rounded-lg transition-colors text-center">
+                𝕏でシェアする
+              </a>
+              <button onClick={() => router.push("/explore?tab=compatibility")}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors">
+                相性の良い相手を探す
+              </button>
+            </div>
+          </div>
+        )}
 
+        {/* ---- 質問画面（未診断・やり直し中） ---- */}
+        {!showExisting && !(step === 9 && result) && (
+          existingType === undefined ? (
+            <div className="flex items-center justify-center py-24">
+              <p className="text-gray-400">読み込み中...</p>
+            </div>
+          ) : (
+            <>
+              <h1 className="text-xl font-bold text-white mb-1 text-center">VTuber性格診断</h1>
+              <p className="text-gray-400 text-sm text-center mb-6">あなたのVTuberタイプを診断します</p>
+              <div className="mb-6">
+                <div className="flex justify-between text-xs text-gray-500 mb-2">
+                  <span>Q{step + 1} / 9</span>
+                  <span>{Math.round((step / 9) * 100)}%</span>
+                </div>
+                <div className="w-full bg-gray-800 rounded-full h-2">
+                  <div className="bg-purple-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(step / 9) * 100}%` }} />
+                </div>
+              </div>
+              <div className="bg-gray-900 rounded-2xl p-8">
+                <p className="text-white text-lg font-medium leading-relaxed mb-8 text-center min-h-[4rem] flex items-center justify-center">
+                  {QUESTIONS[step]}
+                </p>
+                <div className="flex flex-col gap-3">
+                  {OPTIONS.map((opt) => (
+                    <button key={opt.label} onClick={() => handleAnswer(opt.score)}
+                      className="w-full py-4 px-6 rounded-xl border-2 border-gray-700 hover:border-purple-500 hover:bg-purple-600/10 text-gray-200 font-medium transition-all text-sm">
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => router.push("/explore")}
+                className="mt-4 w-full text-gray-500 hover:text-gray-400 text-sm py-2 transition-colors">
+                スキップしてコラボ相手を探す →
+              </button>
+            </>
+          )
+        )}
+
+        {/* GIF・テキスト（常に表示） */}
         <div className="mt-6 flex flex-col items-center gap-2">
           <img src="/pochipochi_NewPiskel3.gif" className="mx-auto w-32 h-auto" alt="" />
           <p className="text-sm text-gray-400 text-center">ぽちぽちおして　しんだんする</p>
         </div>
+
       </div>
     </div>
   );

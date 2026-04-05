@@ -43,6 +43,9 @@ function ExploreContent() {
   const [showPersonalityPromo, setShowPersonalityPromo] = useState(false);
   const tourStartedRef = useRef(false);
   const [onboardingDone, setOnboardingDone] = useState(false);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+  // stale closure 対策: myPersonalityType を ref でも保持
+  const myPersonalityTypeRef = useRef(myPersonalityType);
 
   // URLパラメータ tab=compatibility で相性タブを自動選択
   useEffect(() => {
@@ -59,11 +62,14 @@ function ExploreContent() {
     if (!user) {
       setMyTags([]);
       setMyPersonalityType(null);
+      myPersonalityTypeRef.current = null;
       return;
     }
     getUserProfile(user.uid).then((p) => {
+      const pt = p?.personalityType ?? null;
       setMyTags(p?.youtubeTags ?? []);
-      setMyPersonalityType(p?.personalityType ?? null);
+      setMyPersonalityType(pt);
+      myPersonalityTypeRef.current = pt;
     });
   }, [user]);
 
@@ -85,15 +91,30 @@ function ExploreContent() {
         return els.find((el) => el.getBoundingClientRect().width > 0) ?? els[0] ?? undefined;
       };
 
+      setIsOnboarding(true);
+
       const driverObj = driver({
         showProgress: true,
         progressText: "{{current}} / {{total}}",
         nextBtnText: "次へ",
         prevBtnText: "戻る",
         doneBtnText: "はじめる",
-        onDestroyed: () => {
+        showButtons: ["next", "previous", "close"],
+        onDestroyStarted: () => {
+          setIsOnboarding(false);
           localStorage.setItem("onboarding_completed", "true");
           setOnboardingDone(true);
+          // ツアー終了1秒後に相性診断プロモを表示（未診断の場合）
+          setTimeout(() => {
+            const pt = myPersonalityTypeRef.current;
+            if (!pt) {
+              const today = new Date().toISOString().slice(0, 10);
+              const dismissed = localStorage.getItem("personality_promo_dismissed");
+              if (dismissed !== today) {
+                setShowPersonalityPromo(true);
+              }
+            }
+          }, 1000);
         },
         steps: [
           {
@@ -168,7 +189,9 @@ function ExploreContent() {
   // 性格診断をしていないユーザーへのプロモポップアップ
   useEffect(() => {
     if (myPersonalityType === undefined) return; // まだ読み込み中
-    // ログイン済みはオンボーディング完了後に表示
+    // オンボーディング中は表示しない
+    if (isOnboarding) return;
+    // ログイン済みはオンボーディング完了後に表示（初回はonDestroyStartedで表示するのでスキップ）
     if (user && !onboardingDone) return;
     const today = new Date().toISOString().slice(0, 10);
     const dismissed = localStorage.getItem("personality_promo_dismissed");
@@ -177,7 +200,7 @@ function ExploreContent() {
     if (!myPersonalityType) {
       setShowPersonalityPromo(true);
     }
-  }, [myPersonalityType, onboardingDone, user]);
+  }, [myPersonalityType, onboardingDone, user, isOnboarding]);
 
   // isPublic=false のユーザーを除外、creator は acceptsRequests=true のみ
   const visibleUsers = users.filter(
@@ -217,7 +240,7 @@ function ExploreContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-950 p-8">
+    <div className="min-h-screen bg-gray-950 py-8 px-2.5 sm:px-8">
       {showPickup && user && (
         <PickupModal
           users={visibleUsers}

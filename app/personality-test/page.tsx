@@ -242,7 +242,7 @@ export default function PersonalityTestPage() {
                 𝕏でシェアする
               </a>
               <button
-                onClick={() => router.push("/explore")}
+                onClick={() => router.push("/explore?tab=compatibility")}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-colors"
               >
                 相性の良い相手を探す

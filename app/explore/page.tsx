@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getAllUsers, getUserProfile, PublicUserProfile, toTagArray } from "../../lib/firestore";
 import { useAuth } from "../../lib/AuthContext";
@@ -28,7 +29,8 @@ function countShared(a: string[] | undefined, b: string[]): number {
   return a.filter((t) => b.includes(t)).length;
 }
 
-export default function ExplorePage() {
+function ExploreContent() {
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [users, setUsers] = useState<PublicUserProfile[]>([]);
   const [myTags, setMyTags] = useState<string[]>([]);
@@ -37,6 +39,11 @@ export default function ExplorePage() {
   const [filter, setFilter] = useState<FilterTab>("all");
   const [showPickup, setShowPickup] = useState(false);
   const [showPersonalityPromo, setShowPersonalityPromo] = useState(false);
+
+  // URLパラメータ tab=compatibility で相性タブを自動選択
+  useEffect(() => {
+    if (searchParams.get("tab") === "compatibility") setFilter("compatible");
+  }, [searchParams]);
 
   useEffect(() => {
     getAllUsers()
@@ -56,9 +63,9 @@ export default function ExplorePage() {
     });
   }, [user]);
 
-  // 1日1回ポップアップ表示（ログイン済み・診断済み・全データ読込後）
+  // 1日1回ポップアップ表示（ログイン済み・未診断・全データ読込後）
   useEffect(() => {
-    if (!user || loading || myPersonalityType === undefined || myPersonalityType === null) return;
+    if (!user || loading || myPersonalityType === undefined || myPersonalityType !== null) return;
     const today = new Date().toISOString().slice(0, 10);
     const shown = localStorage.getItem("pickup_shown_date");
     if (shown !== today) {
@@ -208,17 +215,56 @@ export default function ExplorePage() {
           </div>
         ) : loading ? (
           <p className="text-gray-400">読み込み中...</p>
-        ) : compatibleUsers.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-gray-400">相性の良いユーザーがまだいません</p>
-            <p className="text-gray-500 text-xs mt-2">他のユーザーが診断を受けると表示されます</p>
-          </div>
         ) : (
           <>
-            <p className="text-gray-500 text-xs mb-4">
-              あなた（{myPersonalityType}）と相性の良い人を表示しています
-            </p>
-            <UserGrid users={compatibleUsers} myTags={myTags} showCompatible />
+            {compatibleUsers.length > 0 && (
+              <>
+                <p className="text-gray-500 text-xs mb-4">
+                  あなた（{myPersonalityType}）と相性の良い人を表示しています
+                </p>
+                <UserGrid users={compatibleUsers} myTags={myTags} showCompatible />
+              </>
+            )}
+            {compatibleUsers.length < 3 && (
+              <div className="flex flex-col items-center gap-4 py-10 text-center">
+                <style>{`@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}`}</style>
+                <p className="text-xs text-gray-500">ぶいくりん / 困り中</p>
+                <svg width="120" height="145" viewBox="-10 -60 140 220" xmlns="http://www.w3.org/2000/svg" shapeRendering="crispEdges">
+                  <g style={{animation:"float 2s ease-in-out infinite"}}>
+                    <rect x="32" y="-48" width="8" height="8" fill="#7F77DD"/><rect x="88" y="-48" width="8" height="8" fill="#AFA9EC"/>
+                    <rect x="32" y="-40" width="8" height="8" fill="#7F77DD"/><rect x="40" y="-40" width="8" height="8" fill="#AFA9EC"/><rect x="80" y="-40" width="8" height="8" fill="#7F77DD"/><rect x="88" y="-40" width="8" height="8" fill="#AFA9EC"/>
+                    <rect x="32" y="-32" width="8" height="8" fill="#7F77DD"/><rect x="40" y="-32" width="8" height="8" fill="#AFA9EC"/><rect x="48" y="-32" width="8" height="8" fill="#AFA9EC"/><rect x="80" y="-32" width="8" height="8" fill="#7F77DD"/><rect x="88" y="-32" width="8" height="8" fill="#7F77DD"/>
+                    <rect x="40" y="-24" width="8" height="8" fill="#7F77DD"/><rect x="48" y="-24" width="8" height="8" fill="#AFA9EC"/><rect x="72" y="-24" width="8" height="8" fill="#7F77DD"/><rect x="80" y="-24" width="8" height="8" fill="#7F77DD"/><rect x="88" y="-24" width="8" height="8" fill="#7F77DD"/>
+                    <rect x="56" y="-16" width="8" height="8" fill="#7F77DD"/><rect x="64" y="-16" width="8" height="8" fill="#7F77DD"/><rect x="72" y="-16" width="8" height="8" fill="#7F77DD"/>
+                    <rect x="32" y="-8" width="8" height="8" fill="#7F77DD"/><rect x="40" y="-8" width="8" height="8" fill="#7F77DD"/><rect x="48" y="-8" width="8" height="8" fill="#7F77DD"/><rect x="56" y="-8" width="8" height="8" fill="#7F77DD"/><rect x="64" y="-8" width="8" height="8" fill="#7F77DD"/><rect x="72" y="-8" width="8" height="8" fill="#7F77DD"/><rect x="80" y="-8" width="8" height="8" fill="#AFA9EC"/><rect x="88" y="-8" width="8" height="8" fill="#AFA9EC"/>
+                    <rect x="16" y="0" width="8" height="8" fill="#AFA9EC"/><rect x="24" y="0" width="8" height="8" fill="#7F77DD"/><rect x="32" y="0" width="8" height="8" fill="#7F77DD"/><rect x="40" y="0" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="0" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="0" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="0" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="0" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="0" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="0" width="8" height="8" fill="#7F77DD"/><rect x="96" y="0" width="8" height="8" fill="#AFA9EC"/><rect x="104" y="0" width="8" height="8" fill="#AFA9EC"/>
+                    <rect x="8" y="8" width="8" height="8" fill="#AFA9EC"/><rect x="16" y="8" width="8" height="8" fill="#AFA9EC"/><rect x="24" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="40" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="8" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="8" width="8" height="8" fill="#7F77DD"/><rect x="112" y="8" width="8" height="8" fill="#AFA9EC"/>
+                    <rect x="8" y="16" width="8" height="8" fill="#AFA9EC"/><rect x="16" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="40" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="16" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="16" width="8" height="8" fill="#AFA9EC"/>
+                    <rect x="8" y="24" width="8" height="8" fill="#D3D1C7"/><rect x="16" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="40" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="24" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="24" width="8" height="8" fill="#D3D1C7"/>
+                    <rect x="8" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="16" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="32" width="8" height="8" fill="#888780"/><rect x="32" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="40" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="32" width="8" height="8" fill="#888780"/><rect x="104" y="32" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="32" width="8" height="8" fill="#F1EFE8"/>
+                    <rect x="8" y="40" width="8" height="8" fill="#F1EFE8"/><rect x="16" y="40" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="40" width="8" height="8" fill="#D3D1C7"/><rect x="32" y="40" width="8" height="8" fill="#444441"/><rect x="40" y="40" width="8" height="8" fill="#B4B2A9"/><rect x="48" y="40" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="40" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="40" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="40" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="40" width="8" height="8" fill="#B4B2A9"/><rect x="88" y="40" width="8" height="8" fill="#444441"/><rect x="96" y="40" width="8" height="8" fill="#D3D1C7"/><rect x="104" y="40" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="40" width="8" height="8" fill="#F1EFE8"/>
+                    <rect x="8" y="48" width="8" height="8" fill="#F1EFE8"/><rect x="16" y="48" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="48" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="48" width="8" height="8" fill="#F1EFE8"/><rect x="40" y="48" width="8" height="8" fill="#444441"/><rect x="48" y="48" width="8" height="8" fill="#2C2C2A"/><rect x="56" y="48" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="48" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="48" width="8" height="8" fill="#2C2C2A"/><rect x="80" y="48" width="8" height="8" fill="#444441"/><rect x="88" y="48" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="48" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="48" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="48" width="8" height="8" fill="#F1EFE8"/>
+                    <rect x="8" y="56" width="8" height="8" fill="#F1EFE8"/><rect x="16" y="56" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="56" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="56" width="8" height="8" fill="#2C2C2A"/><rect x="40" y="56" width="8" height="8" fill="#444441"/><rect x="48" y="56" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="56" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="56" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="56" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="56" width="8" height="8" fill="#444441"/><rect x="88" y="56" width="8" height="8" fill="#2C2C2A"/><rect x="96" y="56" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="56" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="56" width="8" height="8" fill="#F1EFE8"/>
+                    <rect x="8" y="64" width="8" height="8" fill="#F1EFE8"/><rect x="16" y="64" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="64" width="8" height="8" fill="#444441"/><rect x="32" y="64" width="8" height="8" fill="#D3D1C7"/><rect x="40" y="64" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="64" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="64" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="64" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="64" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="64" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="64" width="8" height="8" fill="#D3D1C7"/><rect x="96" y="64" width="8" height="8" fill="#444441"/><rect x="104" y="64" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="64" width="8" height="8" fill="#F1EFE8"/>
+                    <rect x="8" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="16" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="40" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="72" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="72" width="8" height="8" fill="#F1EFE8"/>
+                    <rect x="8" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="16" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="40" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="80" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="80" width="8" height="8" fill="#F1EFE8"/>
+                    <rect x="8" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="16" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="40" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="88" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="88" width="8" height="8" fill="#F1EFE8"/>
+                    <rect x="8" y="96" width="8" height="8" fill="#D3D1C7"/><rect x="16" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="40" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="80" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="96" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="96" width="8" height="8" fill="#F1EFE8"/>
+                    <rect x="8" y="104" width="8" height="8" fill="#D3D1C7"/><rect x="16" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="24" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="48" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="56" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="88" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="96" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="104" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="104" width="8" height="8" fill="#D3D1C7"/>
+                    <rect x="8" y="112" width="8" height="8" fill="#444441"/><rect x="16" y="112" width="8" height="8" fill="#B4B2A9"/><rect x="24" y="112" width="8" height="8" fill="#F1EFE8"/><rect x="32" y="112" width="8" height="8" fill="#B4B2A9"/><rect x="48" y="112" width="8" height="8" fill="#B4B2A9"/><rect x="56" y="112" width="8" height="8" fill="#F1EFE8"/><rect x="64" y="112" width="8" height="8" fill="#F1EFE8"/><rect x="72" y="112" width="8" height="8" fill="#B4B2A9"/><rect x="88" y="112" width="8" height="8" fill="#B4B2A9"/><rect x="96" y="112" width="8" height="8" fill="#F1EFE8"/><rect x="104" y="112" width="8" height="8" fill="#F1EFE8"/><rect x="112" y="112" width="8" height="8" fill="#444441"/>
+                  </g>
+                </svg>
+                <p className="text-gray-400 text-sm">まだまだユーザーが少ないみたい...</p>
+                <a
+                  href="https://twitter.com/intent/tweet?text=VTuber%E3%81%AE%E7%9B%B8%E6%80%A7%E8%A8%BA%E6%96%ADやってみた！あなたも試してみて👇%0Ahttps://v-kuri.com/personality-test%0A%23Vクリマッチング%20%23VTuber診断"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-sky-500 hover:bg-sky-600 text-white font-bold px-5 py-2.5 rounded-lg text-sm transition-colors"
+                >
+                  𝕏で共有してみんなに診断してもらう
+                </a>
+              </div>
+            )}
           </>
         )
       ) : (
@@ -237,6 +283,14 @@ export default function ExplorePage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-950 flex items-center justify-center"><p className="text-gray-400">読み込み中...</p></div>}>
+      <ExploreContent />
+    </Suspense>
   );
 }
 

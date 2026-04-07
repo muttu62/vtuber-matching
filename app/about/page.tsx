@@ -8,7 +8,7 @@ export default function AboutPage() {
         {/* ロゴ + キャッチコピー */}
         <div className="text-center mb-14">
           <img
-            src="/logo.webp"
+            src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp"
             alt="Vクリマッチング"
             className="h-24 w-auto mx-auto mb-6"
           />

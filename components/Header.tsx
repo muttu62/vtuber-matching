@@ -79,7 +79,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-12 md:hidden border-b border-white/10">
           {/* 1行目: ロゴ（左） */}
           <Link href="/about" className="text-white font-bold text-lg tracking-tight">
-            <img src="/logo.webp" alt="Vクリ" className="h-7 w-auto" />
+            <img src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp" alt="Vクリ" className="h-7 w-auto" />
           </Link>
           {/* 1行目: 申請・マイページ（右） */}
           <nav ref={navRef} className="flex items-center gap-1">
@@ -150,7 +150,7 @@ export default function Header() {
         {/* デスクトップ: 1行レイアウト */}
         <div className="hidden md:flex md:h-14 md:items-center justify-between">
           <Link href="/about" className="text-white font-bold text-lg tracking-tight">
-            <img src="/logo.webp" alt="Vクリ" className="h-8 w-auto" />
+            <img src="https://res.cloudinary.com/djl6ceb4w/image/upload/v1772841919/logo_zbykjc.webp" alt="Vクリ" className="h-8 w-auto" />
           </Link>
           <nav ref={navRef} className="flex items-center gap-1">
             <Link

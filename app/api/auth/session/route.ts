@@ -51,7 +51,9 @@ export async function POST(req: NextRequest) {
     response.cookies.set("session", token, {
       httpOnly: true,
       secure: IS_PRODUCTION,
-      sameSite: "strict",
+      // Lax: 同一サイト内のリクエストとトップレベルナビゲーション（リンク遷移）ではCookieを送信
+      // Strict だとLINEやメールのリンクから開いたときにCookieが送られずログアウト状態になる
+      sameSite: "lax",
       maxAge: 3600,
       path: "/",
     });
@@ -70,7 +72,7 @@ export async function DELETE() {
   response.cookies.set("session", "", {
     httpOnly: true,
     secure: IS_PRODUCTION,
-    sameSite: "strict",
+    sameSite: "lax",
     maxAge: 0,
     path: "/",
   });

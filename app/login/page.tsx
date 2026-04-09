@@ -1,8 +1,9 @@
 "use client";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { signInWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "../../lib/firebase";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "../../lib/AuthContext";
 
 function LoginContent() {
   const [email, setEmail] = useState("");
@@ -14,6 +15,15 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified") === "true";
+  const { user, loading } = useAuth();
+
+  // 既にログイン済み（Cookieセット後）なら /explore へリダイレクト
+  // モバイルで外部リンクから開いてログインページに飛ばされた場合の自動復帰に対応
+  useEffect(() => {
+    if (!loading && user?.emailVerified) {
+      router.push("/explore");
+    }
+  }, [user, loading, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +37,13 @@ function LoginContent() {
         setUnverified(true);
         return;
       }
+      // Cookieをセットしてから遷移する（先に遷移するとミドルウェアにCookieが届かずリダイレクトループになる）
+      const token = await userCredential.user.getIdToken();
+      await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
       router.push("/explore");
     } catch (err: any) {
       setError("ログインに失敗しました: " + err.message);

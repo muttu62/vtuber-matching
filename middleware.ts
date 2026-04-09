@@ -9,7 +9,10 @@ export function middleware(request: NextRequest) {
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
   if (!session && !isPublic && pathname !== "/") {
-    return NextResponse.redirect(new URL("/login", request.url));
+    // returnTo を付けることで、ログイン後に元のページへ戻れるようにする
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("returnTo", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   return NextResponse.next();

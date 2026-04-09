@@ -15,15 +15,20 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified") === "true";
-  const { user, loading } = useAuth();
+  const { user, loading, sessionReady } = useAuth();
 
-  // 既にログイン済み（Cookieセット後）なら /explore へリダイレクト
-  // モバイルで外部リンクから開いてログインページに飛ばされた場合の自動復帰に対応
+  // ミドルウェアが付けた returnTo を取得（未設定なら /explore）
+  // オープンリダイレクト対策: 自サイトの相対パスのみ許可
+  const rawReturnTo = searchParams.get("returnTo") ?? "/explore";
+  const returnTo = rawReturnTo.startsWith("/") && !rawReturnTo.startsWith("//") ? rawReturnTo : "/explore";
+
+  // 既にログイン済みかつ Cookie がセット済みなら元のページへ戻る
+  // sessionReady を待つことで「Cookie未セット → /login → Cookie未セット → ループ」を防ぐ
   useEffect(() => {
-    if (!loading && user?.emailVerified) {
-      router.push("/explore");
+    if (!loading && sessionReady && user?.emailVerified) {
+      router.push(returnTo);
     }
-  }, [user, loading, router]);
+  }, [user, loading, sessionReady, router, returnTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +49,7 @@ function LoginContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
       });
-      router.push("/explore");
+      router.push(returnTo);
     } catch (err: any) {
       setError("ログインに失敗しました: " + err.message);
     }

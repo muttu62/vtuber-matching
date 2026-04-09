@@ -5,6 +5,14 @@ export function middleware(request: NextRequest) {
   const session = request.cookies.get("session");
   const { pathname } = request.nextUrl;
 
+  // API ルートはミドルウェアの認証リダイレクト対象外。
+  // /api/auth/session のように Cookie なしで呼ぶ必要があるエンドポイントが存在するため、
+  // ここでリダイレクトすると Cookie が永遠にセットできなくなる。
+  // 認証が必要な API は各ルートで verifySession により個別に処理する。
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   const publicPaths = ["/login", "/signup", "/terms", "/privacy", "/about", "/explore", "/profile", "/contact", "/auth", "/diagnosis", "/share", "/personality-test"];
   const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
@@ -19,5 +27,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // _next/static, _next/image, favicon.ico, api/ はミドルウェアをスキップ
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/).*)"],
 };

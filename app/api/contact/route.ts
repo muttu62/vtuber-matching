@@ -1,10 +1,18 @@
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
+import { escapeHtml } from "../../../lib/escape-html";
+import { rateLimit } from "../../../lib/rate-limit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Vクリマッチング <noreply@v-kuri.com>";
 
 export async function POST(req: NextRequest) {
+  // IPベースのレート制限（1分間に5回まで）
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  if (!rateLimit(ip)) {
+    return NextResponse.json({ error: "リクエストが多すぎます。しばらくしてから再試行してください。" }, { status: 429 });
+  }
+
   try {
     const { name, email, category, body } = await req.json();
 
@@ -19,6 +27,12 @@ export async function POST(req: NextRequest) {
 
     const senderLabel = name ? name : "匿名";
     const subject = `【Vクリお問い合わせ】${category} - ${senderLabel}`;
+
+    // ユーザー入力はすべてHTMLエスケープしてインジェクションを防ぐ
+    const safeCategory = escapeHtml(category);
+    const safeSenderLabel = escapeHtml(senderLabel);
+    const safeEmail = escapeHtml(email);
+    const safeBody = escapeHtml(body);
 
     const html = `
 <!DOCTYPE html>
@@ -36,25 +50,25 @@ export async function POST(req: NextRequest) {
                 <tr>
                   <td style="padding:8px 0;border-bottom:1px solid #2e2e3e;">
                     <span style="color:#7070a0;font-size:12px;display:block;margin-bottom:2px;">種別</span>
-                    <span style="color:#e2e2ee;font-size:14px;">${category}</span>
+                    <span style="color:#e2e2ee;font-size:14px;">${safeCategory}</span>
                   </td>
                 </tr>
                 <tr>
                   <td style="padding:8px 0;border-bottom:1px solid #2e2e3e;">
                     <span style="color:#7070a0;font-size:12px;display:block;margin-bottom:2px;">お名前</span>
-                    <span style="color:#e2e2ee;font-size:14px;">${senderLabel}</span>
+                    <span style="color:#e2e2ee;font-size:14px;">${safeSenderLabel}</span>
                   </td>
                 </tr>
                 <tr>
                   <td style="padding:8px 0;border-bottom:1px solid #2e2e3e;">
                     <span style="color:#7070a0;font-size:12px;display:block;margin-bottom:2px;">返信先メール</span>
-                    <span style="color:#e2e2ee;font-size:14px;">${email}</span>
+                    <span style="color:#e2e2ee;font-size:14px;">${safeEmail}</span>
                   </td>
                 </tr>
                 <tr>
                   <td style="padding:12px 0 0;">
                     <span style="color:#7070a0;font-size:12px;display:block;margin-bottom:6px;">内容</span>
-                    <p style="margin:0;color:#e2e2ee;font-size:14px;line-height:1.75;white-space:pre-wrap;">${body}</p>
+                    <p style="margin:0;color:#e2e2ee;font-size:14px;line-height:1.75;white-space:pre-wrap;">${safeBody}</p>
                   </td>
                 </tr>
               </table>

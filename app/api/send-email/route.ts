@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "../../../lib/verify-session";
+import { escapeHtml } from "../../../lib/escape-html";
+import { rateLimit } from "../../../lib/rate-limit";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Vクリマッチング <noreply@v-kuri.com>";
@@ -29,6 +31,12 @@ async function getFirestoreUser(uid: string, authToken: string): Promise<{ email
   return { email, name };
 }
 
+/**
+ * メール本文HTMLを生成する
+ * body: エスケープ済みのHTMLテキスト（<br>タグは許可）
+ * buttonText: エスケープ済みのボタンラベル
+ * buttonHref: 内部URLのみ使用すること
+ */
 function buildEmail(body: string, buttonText: string, buttonHref: string): string {
   return `
 <!DOCTYPE html>
@@ -94,6 +102,12 @@ export async function POST(req: NextRequest) {
   console.log("[send-email] POST called");
   console.log("[send-email] RESEND_API_KEY set:", !!process.env.RESEND_API_KEY);
 
+  // IPベースのレート制限（1分間に5回まで）
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  if (!rateLimit(ip)) {
+    return NextResponse.json({ error: "リクエストが多すぎます。しばらくしてから再試行してください。" }, { status: 429 });
+  }
+
   const token = req.cookies.get("session")?.value ?? null;
   const uid = await verifySession(req);
   if (!uid || !token) {
@@ -113,12 +127,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "送信先が見つかりません" }, { status: 400 });
       }
       console.log("[send-email] sending match_request to", receiver.email);
+      // Firestoreから取得したユーザー名をエスケープしてメール本文に埋め込む
+      const safeReceiverName = escapeHtml(receiver.name);
+      const safeSenderName = escapeHtml(body.senderName);
       const { data, error } = await resend.emails.send({
         from: FROM,
         to: receiver.email,
         subject: `【Vクリマッチング】${body.senderName} さんからコラボ申請が届きました🎉`,
         html: buildEmail(
-          `${receiver.name} さん、<strong style="color:#e2e2ee;">${body.senderName}</strong> さんからコラボ申請が届きました！<br><br>マッチング画面から内容を確認して、承認するとマッチング成立です✨`,
+          `${safeReceiverName} さん、<strong style="color:#e2e2ee;">${safeSenderName}</strong> さんからコラボ申請が届きました！<br><br>マッチング画面から内容を確認して、承認するとマッチング成立です✨`,
           "申請を確認する →",
           `${BASE_URL}/matches`
         ),
@@ -136,12 +153,14 @@ export async function POST(req: NextRequest) {
       // 申請者（sender）へ
       if (sender.email) {
         console.log("[send-email] sending match_accepted to sender", sender.email);
+        const safeSenderName = escapeHtml(sender.name);
+        const safeReceiverName = escapeHtml(receiver.name);
         const { data, error } = await resend.emails.send({
           from: FROM,
           to: sender.email,
           subject: `【Vクリマッチング】マッチングが成立しました🎊`,
           html: buildEmail(
-            `${sender.name} さん、おめでとうございます🎉<br><br><strong style="color:#e2e2ee;">${receiver.name}</strong> さんがコラボ申請を承認しました！<br><br>SNSで連絡を取り合ってコラボの詳細を決めましょう✨`,
+            `${safeSenderName} さん、おめでとうございます🎉<br><br><strong style="color:#e2e2ee;">${safeReceiverName}</strong> さんがコラボ申請を承認しました！<br><br>SNSで連絡を取り合ってコラボの詳細を決めましょう✨`,
             "マッチング一覧を見る →",
             `${BASE_URL}/matches`
           ),
@@ -153,12 +172,14 @@ export async function POST(req: NextRequest) {
       // 承認者（receiver）へ
       if (receiver.email) {
         console.log("[send-email] sending match_accepted to receiver", receiver.email);
+        const safeSenderName = escapeHtml(sender.name);
+        const safeReceiverName = escapeHtml(receiver.name);
         const { data, error } = await resend.emails.send({
           from: FROM,
           to: receiver.email,
           subject: `【Vクリマッチング】マッチングが成立しました🎊`,
           html: buildEmail(
-            `${receiver.name} さん、おめでとうございます🎉<br><br><strong style="color:#e2e2ee;">${sender.name}</strong> さんとのマッチングが成立しました！<br><br>SNSで連絡を取り合ってコラボの詳細を決めましょう✨`,
+            `${safeReceiverName} さん、おめでとうございます🎉<br><br><strong style="color:#e2e2ee;">${safeSenderName}</strong> さんとのマッチングが成立しました！<br><br>SNSで連絡を取り合ってコラボの詳細を決めましょう✨`,
             "マッチング一覧を見る →",
             `${BASE_URL}/matches`
           ),

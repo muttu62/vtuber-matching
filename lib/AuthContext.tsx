@@ -23,10 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       if (user && user.emailVerified) {
         const token = await user.getIdToken();
-        document.cookie = `session=${token}; path=/; max-age=3600`;
+        // HttpOnly・Secure・SameSite=Strict のCookieはサーバーサイドでのみ設定可能なため
+        // APIルート経由でセットする（XSS・CSRF対策）
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
       } else {
-        // 未確認ユーザーまたはログアウト時はクッキーをクリア
-        document.cookie = `session=; path=/; max-age=0`;
+        // 未確認ユーザーまたはログアウト時はサーバー側でクッキーをクリア
+        await fetch("/api/auth/session", { method: "DELETE" });
       }
     });
     return unsubscribe;

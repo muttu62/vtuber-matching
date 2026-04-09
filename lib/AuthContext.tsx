@@ -20,20 +20,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // セッションクッキーを常に最新の状態に保てる
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
       setUser(user);
-      setLoading(false);
+      // setLoading(false) は Cookie のセット完了後に呼ぶ。
+      // 先に false にすると「loading=false かつ Cookie 未セット」の瞬間が生まれ、
+      // ミドルウェアが Cookie を確認できず /login へリダイレクトするループが起きる。
       if (user && user.emailVerified) {
         const token = await user.getIdToken();
-        // HttpOnly・Secure・SameSite=Strict のCookieはサーバーサイドでのみ設定可能なため
-        // APIルート経由でセットする（XSS・CSRF対策）
+        // HttpOnly Cookie はサーバーサイドでのみ設定可能なため API 経由でセット
         await fetch("/api/auth/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token }),
-        });
+        }).catch(() => {});
       } else {
         // 未確認ユーザーまたはログアウト時はサーバー側でクッキーをクリア
-        await fetch("/api/auth/session", { method: "DELETE" });
+        await fetch("/api/auth/session", { method: "DELETE" }).catch(() => {});
       }
+      setLoading(false);
     });
     return unsubscribe;
   }, []);

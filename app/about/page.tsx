@@ -12,7 +12,7 @@ export default function AboutPage() {
             alt="Vクリマッチング"
             className="h-24 w-auto mx-auto mb-6"
           />
-          <p className="text-lg font-bold text-yellow-300 mb-3">
+          <p className="text-lg font-bold text-white mb-3">
             診断するだけでノリの合う最高のV友達が見つかる！
           </p>
           <p className="text-xl text-gray-300 leading-relaxed">
@@ -29,7 +29,7 @@ export default function AboutPage() {
               無料で始める
             </Link>
             <p className="text-gray-500 text-xs mt-3">
-              ※当サービスはマッチングのみで、それ以降のやりとりは外部にてお願いしております。
+              ※当サービスはマッチングのみ対応しており、それ以降は任意のサービスにてやり取り可能です。
             </p>
           </div>
         </div>

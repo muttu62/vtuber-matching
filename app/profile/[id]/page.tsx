@@ -186,6 +186,24 @@ export default function UserProfilePage() {
             </div>
           )}
 
+          {/* 性別情報 */}
+          {(profile.characterGender || profile.personGender) && (
+            <div className="border-t border-gray-800 py-4 flex flex-wrap gap-4">
+              {profile.characterGender && (
+                <div>
+                  <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">キャラクター性別</h2>
+                  <p className="text-gray-200 text-sm">{profile.characterGender}</p>
+                </div>
+              )}
+              {profile.personGender && (
+                <div>
+                  <h2 className="text-gray-400 text-xs uppercase tracking-wider mb-1">中の人の性別</h2>
+                  <p className="text-gray-200 text-sm">{profile.personGender}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* コラボスタイルバッジ */}
           {profile.collaboStyle && (
             <div className="border-t border-gray-800 py-4">

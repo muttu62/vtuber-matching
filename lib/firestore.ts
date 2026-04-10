@@ -27,6 +27,8 @@ export type UserProfile = {
   youtubeVideos?: { title: string; thumbnailUrl: string; videoUrl: string }[];
   youtubeVideosCachedAt?: string;
   isPublic?: boolean;
+  characterGender?: string;
+  personGender?: string;
 };
 
 // 他ユーザーに公開するフィールドのみ（email・privateContact・contactPlatform・contactValue を除外）

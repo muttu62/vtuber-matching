@@ -10,6 +10,8 @@ const VTUBER_GENRES = ["ゲーム", "雑談", "歌", "料理", "学習", "その
 const CREATOR_GENRES = ["イラスト", "アニメーション", "動画編集", "デザイン", "作曲", "3Dモデリング", "その他"];
 const ACTIVITY_TIMES = ["朝（6〜12時）", "昼（12〜18時）", "夜（18〜24時）", "深夜（0〜6時）", "不定期"];
 
+const GENDER_OPTIONS = ["男性", "女性", "その他", "非公開"];
+
 type FormValues = {
   name: string;
   userType: string;
@@ -20,6 +22,8 @@ type FormValues = {
   collaboWant: string;
   collaboStyle: string;
   activityGoal: string;
+  characterGender: string;
+  personGender: string;
 };
 
 const EMPTY_FORM: FormValues = {
@@ -32,6 +36,8 @@ const EMPTY_FORM: FormValues = {
   collaboWant: "",
   collaboStyle: "",
   activityGoal: "",
+  characterGender: "",
+  personGender: "",
 };
 
 export default function ProfileEditPage() {
@@ -71,6 +77,8 @@ export default function ProfileEditPage() {
             collaboWant: profile.collaboWant ?? "",
             collaboStyle: profile.collaboStyle ?? "",
             activityGoal: profile.activityGoal ?? "",
+            characterGender: profile.characterGender ?? "",
+            personGender: profile.personGender ?? "",
           };
           setForm(values);
           savedRef.current = values;
@@ -278,6 +286,36 @@ export default function ProfileEditPage() {
           </div>
 
           <div>
+            <label className="block text-gray-300 text-sm mb-1">キャラクター性別</label>
+            <select
+              name="characterGender"
+              value={form.characterGender}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+            >
+              <option value="">選択してください</option>
+              {GENDER_OPTIONS.map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-gray-300 text-sm mb-1">中の人の性別</label>
+            <select
+              name="personGender"
+              value={form.personGender}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+            >
+              <option value="">選択してください</option>
+              {GENDER_OPTIONS.map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
             <label className="block text-gray-300 text-sm mb-1">YouTubeチャンネルURL</label>
             <input
               type="text"
@@ -285,6 +323,18 @@ export default function ProfileEditPage() {
               value={form.youtubeUrl}
               onChange={handleChange}
               placeholder="https://www.youtube.com/@channelname"
+              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-300 text-sm mb-1">関連リンク</label>
+            <input
+              type="text"
+              name="snsLinks"
+              value={form.snsLinks}
+              onChange={handleChange}
+              placeholder="X・ホームページなどのURL"
               className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
             />
           </div>
@@ -331,18 +381,6 @@ export default function ProfileEditPage() {
               rows={3}
               maxLength={200}
               className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500 resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-300 text-sm mb-1">関連リンク</label>
-            <input
-              type="text"
-              name="snsLinks"
-              value={form.snsLinks}
-              onChange={handleChange}
-              placeholder="X・ホームページなどのURL"
-              className="w-full p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-purple-500"
             />
           </div>
 

@@ -12,7 +12,7 @@ export default function AboutPage() {
             alt="Vクリマッチング"
             className="h-24 w-auto mx-auto mb-6"
           />
-          <p className="text-3xl font-bold text-white mb-3">
+          <p className="text-2xl font-semibold text-white mb-3">
             診断するだけで<br />最高のV友達が見つかる！
           </p>
           <p className="text-lg text-gray-300 leading-relaxed">
